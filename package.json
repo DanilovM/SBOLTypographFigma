@@ -1,0 +1,14 @@
+{
+  "name": "SBOL-Typograph",
+  "version": "1.0.0",
+  "description": "SBOL Typograph",
+  "main": "code.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "author": "Mikhail Danilov",
+  "license": "",
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.18.2"
+  }
+}
