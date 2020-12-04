@@ -90,4 +90,4 @@ Figma плагин для исправления и форматировани
     
 ## Другие версии
 * __[SBOL Typograph Sketch](https://danilovm.github.io/SBOLTypographSketch/)__ — плагин для Sketch
-* __[SBOL Typograph JS](https://danilovm.github.io/SBOLTypographJS/)__ — Online версия типографа
+* __[SBOL Typograph JS](https://danilovm.github.io/SBOLTypographJS/)__ — online версия типографа
