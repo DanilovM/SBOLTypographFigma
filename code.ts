@@ -83,62 +83,74 @@ async function main() {
 }
 
 function runTypograph(stringToParse) {
+
   function punctuation() {
     // Заменяем ...? ⟶ ?‥ и ...! ⟶ !‥
     stringToParse = stringToParse.replace(/(\.{2,}|…)(\!|\?)/gm, function (match, p1, p2) {
       _counterPunctuation++;
       return p2 + '\u2025';
     });
+
     // Заменяем ?... ⟶ ?‥ и !... ⟶ !‥
     stringToParse = stringToParse.replace(/(\!|\?)(\.{2,3}|…)/gm, function (match, p1) {
       _counterPunctuation++;
       return p1 + '\u2025';
     });
+
     // Заменяем ... на знак многоточия … U+2026
     stringToParse = stringToParse.replace(/\.{3,}/gm, function () {
       _counterPunctuation++;
       return '\u2026';
     });
+
     // Заменяем несколько знаков ????? на один
     stringToParse = stringToParse.replace(/(\?){2,}/gm, function (match, p1) {
       _counterPunctuation++;
       return p1;
     });
+
     // Заменяем несколько знаков !!!! на один
     stringToParse = stringToParse.replace(/(\!){2,}/gm, function (match, p1) {
       _counterPunctuation++;
       return p1;
     });
+
     // Заменяем несколько знаков .. на один
     stringToParse = stringToParse.replace(/(\.){2,}/gm, function (match, p1) {
       _counterPunctuation++;
       return p1;
     });
+
     // Заменяем несколько знаков ,, на один
     stringToParse = stringToParse.replace(/(\,){2,}/gm, function (match, p1) {
       _counterPunctuation++;
       return p1;
     });
+
     // Заменяем несколько знаков ;;; на один
     stringToParse = stringToParse.replace(/(\;){2,}/gm, function (match, p1) {
       _counterPunctuation++;
       return p1;
     });
+
     // Заменяем несколько знаков ::: на один
     stringToParse = stringToParse.replace(/(\:){2,}/gm, function (match, p1) {
       _counterPunctuation++;
       return p1;
     });
+
     // Заменяем несколько знаков -- на один
     stringToParse = stringToParse.replace(/(\-){2,}/gm, function (match, p1) {
       _counterPunctuation++;
       return p1;
     });
+
     // Заменяем !? ⟶ ?!
     stringToParse = stringToParse.replace(/(\!\?)/gm, function () {
       _counterPunctuation++;
       return '?!';
     });
+
     // Переносим точку внутри кавычки наружу "Конец." ⟶ "Конец".
     stringToParse = stringToParse.replace(/([^\.])(\.)([\u0022\»\“\”\’])(\.)?/gm, function (match, p1, p2, p3) {
       _counterPunctuation++;
@@ -412,16 +424,16 @@ function runTypograph(stringToParse) {
     // В конце функции dash() заменится обратно на -
     let specialDash = '';
 
-    let reFederal = new RegExp('[\\+\\(]*?' + spaceTmpl + '(8)' + spaceTmpl + '' + dashTmpl + '\\(?(800)' + spaceTmpl + '' + dashTmpl + '[\\)]?' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)', 'gm');
-    stringToParse = stringToParse.replace(reFederal, function (match, p1, p2, p3, p4, p5, p6, p7, p8, p9) {
+    let reFederal = new RegExp('(' + spaceTmpl + ')[\\+\\(]*?' + spaceTmpl + '(8)' + spaceTmpl + '' + dashTmpl + '\\(?(800)' + spaceTmpl + '' + dashTmpl + '[\\)]?' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)', 'gm');
+    stringToParse = stringToParse.replace(reFederal, function (match, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10) {
       specialDash = '\u002D';
-      phoneNumber = p1 + _nbsp + '(' + p2 + ')' + _nbsp + p3 + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
+      phoneNumber = p1 + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
       if (match != phoneNumber) {
         _counterPhoneNumber++;
       }
       // Заменяем - на спецсимвол
       specialDash = '<phoneDash>';
-      phoneNumber = p1 + _nbsp + '(' + p2 + ')' + _nbsp + p3 + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
+      phoneNumber = p1 + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
 
       return phoneNumber;
     });
@@ -430,15 +442,15 @@ function runTypograph(stringToParse) {
     // +7 вместо 8
     // Если трёхзначный код города, формат номера +7 (111) 111-11-11
     // Если четырёхзначный код города, формат номера +7 (1111) 11-11-11
-    let reRu = new RegExp('[\\+\\(]*?' + spaceTmpl + '(7|8)' + spaceTmpl + '' + dashTmpl + '\\(?(' + dict.phoneCodeRu + ')' + spaceTmpl + '' + dashTmpl + '[\\)]?' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)?' + spaceDashTmpl + '(\\d)?', 'gm');
+    let reRu = new RegExp('(' + spaceTmpl + ')[\\+\\(]*?' + spaceTmpl + '(7|8)' + spaceTmpl + '' + dashTmpl + '\\(?(' + dict.phoneCodeRu + ')' + spaceTmpl + '' + dashTmpl + '[\\)]?' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)?' + spaceDashTmpl + '(\\d)?', 'gm');
 
-    stringToParse = stringToParse.replace(reRu, function (match, p1, p2, p3, p4, p5, p6, p7, p8, p9) {
-      p1 = '7';
+    stringToParse = stringToParse.replace(reRu, function (match, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10) {
+      p2 = '7';
       specialDash = '\u002D';
-      if (p2.length == 3) {
-        phoneNumber = '+' + p1 + _nbsp + '(' + p2 + ')' + _nbsp + p3 + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
-      } else if (p2.length == 4) {
-        phoneNumber = '+' + p1 + _nbsp + '(' + p2 + ')' + _nbsp + p3 + p4 + specialDash + p5 + p6 + specialDash + p7 + p8;
+      if (p3.length == 3) {
+        phoneNumber = p1 + '+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
+      } else if (p3.length == 4) {
+        phoneNumber = p1 + '+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
       }
       if (match != phoneNumber) {
         _counterPhoneNumber++;
@@ -446,10 +458,10 @@ function runTypograph(stringToParse) {
 
       // Заменяем - на спецсимвол
       specialDash = '<phoneDash>';
-      if (p2.length == 3) {
-        phoneNumber = '+' + p1 + _nbsp + '(' + p2 + ')' + _nbsp + p3 + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
-      } else if (p2.length == 4) {
-        phoneNumber = '+' + p1 + _nbsp + '(' + p2 + ')' + _nbsp + p3 + p4 + specialDash + p5 + p6 + specialDash + p7 + p8;
+      if (p3.length == 3) {
+        phoneNumber = p1 +'+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
+      } else if (p3.length == 4) {
+        phoneNumber = p1 + '+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
       }
       return phoneNumber;
 
@@ -550,7 +562,6 @@ function runTypograph(stringToParse) {
       return '\u002D';
     });
 
-
   }
 
   function lowerCase() {
@@ -566,12 +577,14 @@ function runTypograph(stringToParse) {
         }
         return p1 + p2 + '<noReplace>' + p3 + '<noReplace>';
       });
+
       // Заменяем все вхождения из списка на нижний регистр
       regexp = new RegExp('(^|[\\u0020\\u00A0«„\\"\\(\\[])(' + params + ')(?=[\\u0020\\u00A0\\…\\,\\;\\:\\?\\!\\"»“‘\\)\\]])', 'gm');
       stringToParse = stringToParse.replace(regexp, function (match, p1, p2) {
         _counterLowerCase++;
         return p1 + p2.toLowerCase();
       });
+
       // Удаляем маркер
       stringToParse = stringToParse.replace(/<noReplace>/g, "");
     }
@@ -580,6 +593,83 @@ function runTypograph(stringToParse) {
     toLowerCase('Приложение|Приложения|Приложений|Приложению|Приложениям|Приложением|Приложениями|Приложении|Приложениях|Приложении');
     toLowerCase('Условие|Условия|Условий|Условию|Условиям|Условием|Условиями|Условии|Условиях');
     toLowerCase('Сайт|Сайта|Сайту|Сайтом|Сайте|Сайты|Сайтов|Сайтам|Сайты|Сайтами|Сайтах');
+  }
+
+  function currency() {
+    // Правило гласит, что, если сокращение образовано отсечением части слова, точка ставится (тыс., г., стр.).
+    // Если же сокращение состоит из согласных, а гласные при этом опущены, причем последняя согласная
+    // является последней буквой полного слова, точка не ставится (млн, млрд, трлн).
+
+    // После тыс должна быть точка
+    stringToParse = stringToParse.replace(/(тыс)([!?,:;\u00A0\u0020\n]|$)/gmi, function (match, p1, p2) {
+      return p1 + '.' + p2;
+    });
+
+    // После млн млрд трлн точки быть не должно
+    stringToParse = stringToParse.replace(/(млн|млрд|трлн)\./gmi, function (match, p1, p2) {
+      return p1;
+    });
+
+    // Ставим точку после млн млрд трлн, если это конец предложения
+    stringToParse = stringToParse.replace(/(млн|млрд|трлн)(\u0020|\u00A0)((«|—(\u0020|\u00A0))?[А-ЯЁ])/gm, function (match, p1, p2, p3) {
+      return p1 + '.' + p2 + p3;
+    });
+
+    // Переводим USD в $
+    stringToParse = stringToParse.replace(/(\d|тыс\.|млн|млрд|трлн)(\u0020|\u00A0)?(USD)\.?([!?,:;\u00A0\u0020\n]|$)/gmi, function (match, p1, p2, p3, p4) {
+      _counterCurrency++;
+      _counterAddNoBreakSpace++;
+      return p1 + _nbsp + '$' + p4;
+    });
+
+    // Переводим EUR в €
+    stringToParse = stringToParse.replace(/(\d|тыс\.|млн|млрд|трлн)(\u0020|\u00A0)?(EUR)\.?([!?,:;\u00A0\u0020\n]|$)/gmi, function (match, p1, p2, p3, p4) {
+      _counterCurrency++;
+      _counterAddNoBreakSpace++;
+      return p1 + _nbsp + '€' + p4;
+    });
+
+    // Переводим Р, р., руб. RUR RUB в ₽
+    stringToParse = stringToParse.replace(/(\d|тыс\.|млн|млрд|трлн)(\u0020|\u00A0)?(р|руб|RUR|RUB)\.?([!?,:;\u00A0\u0020\n]|$)/gmi, function (match, p1, p2, p3, p4) {
+      _counterRub++;
+      _counterAddNoBreakSpace++;
+      return p1 + _nbsp + '₽' + p4;
+    });
+    // Убираем копейки в основную сумму
+    stringToParse = stringToParse.replace(/(\d)(\u00A0₽)(\u0020|\u00A0)(\d{1,2})(\u0020|\u00A0)?(к|коп)\.?([!?,:;\u00A0\u0020\n]|$)/gmi, function (match, p1, p2, p3, p4, p5, p6, p7) {
+      let kop;
+      if (p4.length == 1) {
+        kop = '0' + p4;
+      } else {
+        kop = p4;
+      }
+      return p1 + ',' + kop + p2 + p7;
+    });
+
+    // Ставим точку после ₽, если это конец предложения
+    stringToParse = stringToParse.replace(/(\d\u00A0₽)(\u0020|\u00A0)((«|—(\u0020|\u00A0))?[А-ЯЁ])/gm, function (match, p1, p2, p3) {
+      return p1 + '.' + p2 + p3;
+    });
+
+    // Переносим знак валюты после цифр и отделяем неразрывным пробелом
+    // $123 ⟶ 123 $   ₽ 50 тыс. ⟶ 50 тыс. ₽
+    stringToParse = stringToParse.replace(/(^|[\D]{2})(₽|\$|€|£|¥)[\u0020\u00A0]?(\d+([\u0020\u00A0]\d{3})*([.,]\d+)?)([\u0020\u00A0]?(тыс\.|млн|млрд|трлн))?/gm, function (match, p1, p2, p3, p4, p5, p6, p7) {
+      let sokr;
+      if (p7 === undefined) {
+        sokr = '';
+      } else {
+        sokr = _nbsp + p7;
+      }
+      _counterCurrency++;
+      _counterAddNoBreakSpace++;
+      return p1 + p3 + sokr + _nbsp + p2;
+    });
+    
+    // Отделяем знак валюты от числа неразрывным пробелом
+    stringToParse = stringToParse.replace(/(\d)(\u0020)?(₽|\$|€|£|¥)/gm, function (match, p1, p2, p3) {
+      _counterAddNoBreakSpace++;
+      return p1 + _nbsp + p3;
+    });
   }
 
   function numbers() {
@@ -618,104 +708,10 @@ function runTypograph(stringToParse) {
       return integerPart + fractionalPart + currencyPart;
     });
 
-    // Если после числа формата XX,XX,XXXX или XX,XX не идёт знак валюты или млн., трлн и т.д., то это дата
-    // Меняем в числе запятую на точку
-    stringToParse = stringToParse.replace(/(^|\D)(\d{2})\,(\d{2})(?!\u00A0(тыс|млн|млрд|трлн|₽|\$|€|£|¥))(\,(\d{4}))?($|\D)/gm, function (match, p1, p2, p3, p4, p5, p6, p7) {
-      _counterReplaceDotWithComma--;
-      let year = '';
-      if (p5 !== undefined) {
-        year = '.' + p6;
-      }
-      return p1 + p2 + '.' + p3 + year + p7;
-    });
-
-    // Если это индекс, возвращаем как было, 6 цифр слитно, за ними запятая с пробелом
-    stringToParse = stringToParse.replace(/(^|\D)(\d{3})\u00A0(\d{3})(\,\u0020)/gm, function (match, p1, p2, p3, p4) {
-      _counterAddNoBreakSpace--;
-      return p1 + p2 + p3 + p4;
-    });
-
-    // Если это четырёхзначный код города в телефонном номере, возвращаем как было,
-    // число - неразрывный пробел - скобка - четыре цифры - скобка - неразрывный пробел - число
-    stringToParse = stringToParse.replace(/(\d\u00A0\()(\d)\u00A0(\d{3})(\)\u00A0\d)/gm, function (match, p1, p2, p3, p4) {
-      _counterAddNoBreakSpace--;
-      return p1 + p2 + p3 + p4;
-    });
-
-    // Если это 20-ти значное число, предполагаем, что это номер счёта и  возвращаем как было, 20 цифр слитно
-    stringToParse = stringToParse.replace(/(^|\D)(\d{2})\u00A0(\d{3})\u00A0(\d{3})\u00A0(\d{3})\u00A0(\d{3})\u00A0(\d{3})\u00A0(\d{3})($|\D)/gm, function (match, p1, p2, p3, p4, p5, p6, p7, p8) {
-      _counterAddNoBreakSpace = _counterAddNoBreakSpace - 6;
-      return p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8;
-    });
-  }
-
-  function currency() {
-    // Правило гласит, что, если сокращение образовано отсечением части слова, точка ставится (тыс., г., стр.).
-    // Если же сокращение состоит из согласных, а гласные при этом опущены, причем последняя согласная
-    // является последней буквой полного слова, точка не ставится (млн, млрд, трлн).
-
-    // После тыс должна быть точка
-    stringToParse = stringToParse.replace(/(тыс)([!?,:;\u00A0\u0020\n]|$)/gmi, function (match, p1, p2) {
-      return p1 + '.' + p2;
-    });
-    // После млн млрд трлн точки быть не должно
-    stringToParse = stringToParse.replace(/(млн|млрд|трлн)\./gmi, function (match, p1, p2) {
-      return p1;
-    });
-    // Ставим точку после млн млрд трлн, если это конец предложения
-    stringToParse = stringToParse.replace(/(млн|млрд|трлн)(\u0020|\u00A0)((«|—(\u0020|\u00A0))?[А-ЯЁ])/gm, function (match, p1, p2, p3) {
-      return p1 + '.' + p2 + p3;
-    });
-    // Переводим USD в $
-    stringToParse = stringToParse.replace(/(\d|тыс\.|млн|млрд|трлн)(\u0020|\u00A0)?(USD)\.?([!?,:;\u00A0\u0020\n]|$)/gmi, function (match, p1, p2, p3, p4) {
-      _counterCurrency++;
-      _counterAddNoBreakSpace++;
-      return p1 + _nbsp + '$' + p4;
-    });
-    // Переводим EUR в €
-    stringToParse = stringToParse.replace(/(\d|тыс\.|млн|млрд|трлн)(\u0020|\u00A0)?(EUR)\.?([!?,:;\u00A0\u0020\n]|$)/gmi, function (match, p1, p2, p3, p4) {
-      _counterCurrency++;
-      _counterAddNoBreakSpace++;
-      return p1 + _nbsp + '€' + p4;
-    });
-    // Переводим Р, р., руб. RUR RUB в ₽
-    stringToParse = stringToParse.replace(/(\d|тыс\.|млн|млрд|трлн)(\u0020|\u00A0)?(р|руб|RUR|RUB)\.?([!?,:;\u00A0\u0020\n]|$)/gmi, function (match, p1, p2, p3, p4) {
-      _counterRub++;
-      _counterAddNoBreakSpace++;
-      return p1 + _nbsp + '₽' + p4;
-    });
-    // Убираем копейки в основную сумму
-    stringToParse = stringToParse.replace(/(\d)(\u00A0₽)(\u0020|\u00A0)(\d{1,2})(\u0020|\u00A0)?(к|коп)\.?([!?,:;\u00A0\u0020\n]|$)/gmi, function (match, p1, p2, p3, p4, p5, p6, p7) {
-      let kop;
-      if (p4.length == 1) {
-        kop = '0' + p4;
-      } else {
-        kop = p4;
-      }
-      return p1 + ',' + kop + p2 + p7;
-    });
-    // Ставим точку после ₽, если это конец предложения
-    stringToParse = stringToParse.replace(/(\d\u00A0₽)(\u0020|\u00A0)((«|—(\u0020|\u00A0))?[А-ЯЁ])/gm, function (match, p1, p2, p3) {
-      return p1 + '.' + p2 + p3;
-    })
-    // Переносим знак валюты после цифр и отделяем неразрывным пробелом
-    // $123 ⟶ 123 $   ₽ 50 тыс. ⟶ 50 тыс. ₽
-    stringToParse = stringToParse.replace(/(^|[\D]{2})(₽|\$|€|£|¥)[\u0020\u00A0]?(\d+([\u0020\u00A0]\d{3})*([.,]\d+)?)([\u0020\u00A0]?(тыс\.|млн|млрд|трлн))?/gm, function (match, p1, p2, p3, p4, p5, p6, p7) {
-      let sokr;
-      if (p7 === undefined) {
-        sokr = '';
-      } else {
-        sokr = _nbsp + p7;
-      }
-      _counterCurrency++;
-      _counterAddNoBreakSpace++;
-      return p1 + p3 + sokr + _nbsp + p2;
-    });
-    // Отделяем знак валюты от числа неразрывным пробелом
-    stringToParse = stringToParse.replace(/(\d)(₽|\$|€|£|¥)/gm, function (match, p1, p2) {
-      _counterCurrency++;
-      _counterAddNoBreakSpace++;
-      return p1 + _nbsp + p2;
+    // Если число формата XX,XX,XXXX или XX,XX,ХХ меняем запятую на точку
+    stringToParse = stringToParse.replace(/(^|\D)(\d{2})\,(\d{2})\,(\d{2,4})($|\D)/gm, function (match, p1, p2, p3, p4, p5) {
+      _counterReplaceDotWithComma++;
+      return p1 + p2 + '.' + p3 + '.' + p4 + p5;
     });
   }
 
