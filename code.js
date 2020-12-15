@@ -394,42 +394,42 @@ function runTypograph(stringToParse) {
         // Специальный символ для тире в тел. номере. Нужен, что бы при замене тире, не менялся на среднее тире между цифрами
         // В конце функции dash() заменится обратно на -
         let specialDash = '';
-        let reFederal = new RegExp('[\\+\\(]*?' + spaceTmpl + '(8)' + spaceTmpl + '' + dashTmpl + '\\(?(800)' + spaceTmpl + '' + dashTmpl + '[\\)]?' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)', 'gm');
-        stringToParse = stringToParse.replace(reFederal, function (match, p1, p2, p3, p4, p5, p6, p7, p8, p9) {
+        let reFederal = new RegExp('(' + spaceTmpl + ')[\\+\\(]*?' + spaceTmpl + '(8)' + spaceTmpl + '' + dashTmpl + '\\(?(800)' + spaceTmpl + '' + dashTmpl + '[\\)]?' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)', 'gm');
+        stringToParse = stringToParse.replace(reFederal, function (match, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10) {
             specialDash = '\u002D';
-            phoneNumber = p1 + _nbsp + '(' + p2 + ')' + _nbsp + p3 + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
+            phoneNumber = p1 + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
             if (match != phoneNumber) {
                 _counterPhoneNumber++;
             }
             // Заменяем - на спецсимвол
             specialDash = '<phoneDash>';
-            phoneNumber = p1 + _nbsp + '(' + p2 + ')' + _nbsp + p3 + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
+            phoneNumber = p1 + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
             return phoneNumber;
         });
         // В номерах телефонов +7 (333) 333-22-22 используем дефис без пробелов
         // +7 вместо 8
         // Если трёхзначный код города, формат номера +7 (111) 111-11-11
         // Если четырёхзначный код города, формат номера +7 (1111) 11-11-11
-        let reRu = new RegExp('[\\+\\(]*?' + spaceTmpl + '(7|8)' + spaceTmpl + '' + dashTmpl + '\\(?(' + dict.phoneCodeRu + ')' + spaceTmpl + '' + dashTmpl + '[\\)]?' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)?' + spaceDashTmpl + '(\\d)?', 'gm');
-        stringToParse = stringToParse.replace(reRu, function (match, p1, p2, p3, p4, p5, p6, p7, p8, p9) {
-            p1 = '7';
+        let reRu = new RegExp('(' + spaceTmpl + ')[\\+\\(]*?' + spaceTmpl + '(7|8)' + spaceTmpl + '' + dashTmpl + '\\(?(' + dict.phoneCodeRu + ')' + spaceTmpl + '' + dashTmpl + '[\\)]?' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)?' + spaceDashTmpl + '(\\d)?', 'gm');
+        stringToParse = stringToParse.replace(reRu, function (match, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10) {
+            p2 = '7';
             specialDash = '\u002D';
-            if (p2.length == 3) {
-                phoneNumber = '+' + p1 + _nbsp + '(' + p2 + ')' + _nbsp + p3 + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
+            if (p3.length == 3) {
+                phoneNumber = p1 + '+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
             }
-            else if (p2.length == 4) {
-                phoneNumber = '+' + p1 + _nbsp + '(' + p2 + ')' + _nbsp + p3 + p4 + specialDash + p5 + p6 + specialDash + p7 + p8;
+            else if (p3.length == 4) {
+                phoneNumber = p1 + '+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
             }
             if (match != phoneNumber) {
                 _counterPhoneNumber++;
             }
             // Заменяем - на спецсимвол
             specialDash = '<phoneDash>';
-            if (p2.length == 3) {
-                phoneNumber = '+' + p1 + _nbsp + '(' + p2 + ')' + _nbsp + p3 + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
+            if (p3.length == 3) {
+                phoneNumber = p1 + '+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
             }
-            else if (p2.length == 4) {
-                phoneNumber = '+' + p1 + _nbsp + '(' + p2 + ')' + _nbsp + p3 + p4 + specialDash + p5 + p6 + specialDash + p7 + p8;
+            else if (p3.length == 4) {
+                phoneNumber = p1 + '+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
             }
             return phoneNumber;
         });
@@ -548,64 +548,6 @@ function runTypograph(stringToParse) {
         toLowerCase('Условие|Условия|Условий|Условию|Условиям|Условием|Условиями|Условии|Условиях');
         toLowerCase('Сайт|Сайта|Сайту|Сайтом|Сайте|Сайты|Сайтов|Сайтам|Сайты|Сайтами|Сайтах');
     }
-    function numbers() {
-        // Если за числом идёт знак %, валюты или млн, трлн и т.д. разбиваем по разрядам только четырёх и более значную целую часть
-        // Дробную часть не разбиваем
-        // Заменяем точку на запятую
-        stringToParse = stringToParse.replace(/(\d+)(([.,])(\d+))?((\u00A0(тыс\.|млн|млрд|трлн|₽|\$|€|£|¥))|%)/g, function (match, p1, p2, p3, p4, p5) {
-            // p1 — целая часть
-            // p2 – разделитель и дробная часть, если есть
-            // p3 — разделитель
-            // p4 — дробная часть
-            // p5 — валюта или %
-            let integerPart = p1;
-            if (p1.length >= 4 || p5 !== undefined) {
-                integerPart = p1.replace(/(\d)(?=(\d{3})+([\D]|$))/g, function (match, a1) {
-                    _counterAddNoBreakSpace++;
-                    return a1 + _nbsp;
-                });
-            }
-            let fractionalPart;
-            if (p2 === undefined) {
-                fractionalPart = '';
-            }
-            else {
-                fractionalPart = ',' + p4;
-                _counterReplaceDotWithComma++;
-            }
-            let currencyPart = '';
-            if (p5 !== undefined) {
-                currencyPart = p5;
-            }
-            return integerPart + fractionalPart + currencyPart;
-        });
-        // Если после числа формата XX,XX,XXXX или XX,XX не идёт знак валюты или млн., трлн и т.д., то это дата
-        // Меняем в числе запятую на точку
-        stringToParse = stringToParse.replace(/(^|\D)(\d{2})\,(\d{2})(?!\u00A0(тыс|млн|млрд|трлн|₽|\$|€|£|¥))(\,(\d{4}))?($|\D)/gm, function (match, p1, p2, p3, p4, p5, p6, p7) {
-            _counterReplaceDotWithComma--;
-            let year = '';
-            if (p5 !== undefined) {
-                year = '.' + p6;
-            }
-            return p1 + p2 + '.' + p3 + year + p7;
-        });
-        // Если это индекс, возвращаем как было, 6 цифр слитно, за ними запятая с пробелом
-        stringToParse = stringToParse.replace(/(^|\D)(\d{3})\u00A0(\d{3})(\,\u0020)/gm, function (match, p1, p2, p3, p4) {
-            _counterAddNoBreakSpace--;
-            return p1 + p2 + p3 + p4;
-        });
-        // Если это четырёхзначный код города в телефонном номере, возвращаем как было,
-        // число - неразрывный пробел - скобка - четыре цифры - скобка - неразрывный пробел - число
-        stringToParse = stringToParse.replace(/(\d\u00A0\()(\d)\u00A0(\d{3})(\)\u00A0\d)/gm, function (match, p1, p2, p3, p4) {
-            _counterAddNoBreakSpace--;
-            return p1 + p2 + p3 + p4;
-        });
-        // Если это 20-ти значное число, предполагаем, что это номер счёта и  возвращаем как было, 20 цифр слитно
-        stringToParse = stringToParse.replace(/(^|\D)(\d{2})\u00A0(\d{3})\u00A0(\d{3})\u00A0(\d{3})\u00A0(\d{3})\u00A0(\d{3})\u00A0(\d{3})($|\D)/gm, function (match, p1, p2, p3, p4, p5, p6, p7, p8) {
-            _counterAddNoBreakSpace = _counterAddNoBreakSpace - 6;
-            return p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8;
-        });
-    }
     function currency() {
         // Правило гласит, что, если сокращение образовано отсечением части слова, точка ставится (тыс., г., стр.).
         // Если же сокращение состоит из согласных, а гласные при этом опущены, причем последняя согласная
@@ -670,10 +612,46 @@ function runTypograph(stringToParse) {
             return p1 + p3 + sokr + _nbsp + p2;
         });
         // Отделяем знак валюты от числа неразрывным пробелом
-        stringToParse = stringToParse.replace(/(\d)(₽|\$|€|£|¥)/gm, function (match, p1, p2) {
-            _counterCurrency++;
+        stringToParse = stringToParse.replace(/(\d)(\u0020)?(₽|\$|€|£|¥)/gm, function (match, p1, p2, p3) {
             _counterAddNoBreakSpace++;
-            return p1 + _nbsp + p2;
+            return p1 + _nbsp + p3;
+        });
+    }
+    function numbers() {
+        // Если за числом идёт знак %, валюты или млн, трлн и т.д. разбиваем по разрядам только четырёх и более значную целую часть
+        // Дробную часть не разбиваем
+        // Заменяем точку на запятую
+        stringToParse = stringToParse.replace(/(\d+)(([.,])(\d+))?((\u00A0(тыс\.|млн|млрд|трлн|₽|\$|€|£|¥))|%)/g, function (match, p1, p2, p3, p4, p5) {
+            // p1 — целая часть
+            // p2 – разделитель и дробная часть, если есть
+            // p3 — разделитель
+            // p4 — дробная часть
+            // p5 — валюта или %
+            let integerPart = p1;
+            if (p1.length >= 4 || p5 !== undefined) {
+                integerPart = p1.replace(/(\d)(?=(\d{3})+([\D]|$))/g, function (match, a1) {
+                    _counterAddNoBreakSpace++;
+                    return a1 + _nbsp;
+                });
+            }
+            let fractionalPart;
+            if (p2 === undefined) {
+                fractionalPart = '';
+            }
+            else {
+                fractionalPart = ',' + p4;
+                _counterReplaceDotWithComma++;
+            }
+            let currencyPart = '';
+            if (p5 !== undefined) {
+                currencyPart = p5;
+            }
+            return integerPart + fractionalPart + currencyPart;
+        });
+        // Если число формата XX,XX,XXXX или XX,XX,ХХ меняем запятую на точку
+        stringToParse = stringToParse.replace(/(^|\D)(\d{2})\,(\d{2})\,(\d{2,4})($|\D)/gm, function (match, p1, p2, p3, p4, p5) {
+            _counterReplaceDotWithComma++;
+            return p1 + p2 + '.' + p3 + '.' + p4 + p5;
         });
     }
     function misc() {
