@@ -1,5 +1,8 @@
+figma.showUI(__html__, { width: 380, height: 120 });
+
 let selectedTxtNodes = [];
 let workReportData = {};
+let loadedFonts = new Set();
 
 let _nbsp = '\u00A0';
 let _counterPunctuation = 0;
@@ -15,10 +18,9 @@ let _counterRub = 0;
 let _counterCurrency = 0;
 let _counterLowerCase = 0;
 let _counterOther = 0;
+let _counterMissingFont = 0;
 
 let _yoDict = new Map();
-
-figma.showUI(__html__, { width: 360, height: 118 });
 
 // Инициализация словарей
 const dict = {
@@ -66,7 +68,12 @@ if (figma.currentPage.selection.length === 0) {
 // Заполняем массив выбранными текстовыми узлами
 function findSelectedTextNodes(selected) {
   if (selected.type == 'TEXT') {
+    if (selected.hasMissingFont != true) {
     selectedTxtNodes.push(selected);
+    } else {
+      // Если в узле есть не установленный у пользователя шрифт, узел не обрабатываем
+      _counterMissingFont++;
+    }
   }
   if (selected.children) {
     selected.children.forEach(findSelectedTextNodes);
@@ -74,11 +81,37 @@ function findSelectedTextNodes(selected) {
 
 }
 
+async function loadFont(fontToCheck) {
+    // Если fontToCheck нет в коллекции loadedFonts, добавляем его туда и вызываем loadFontAsync с ним
+    let fontFamilyStyle = fontToCheck.family+":"+fontToCheck.style; 
+    if (!loadedFonts.has(fontFamilyStyle)) {
+      loadedFonts.add(fontFamilyStyle);
+      await figma.loadFontAsync(fontToCheck);
+    }
+}
+
 async function main() {
-  // Перебор массива с выбранными текстовыми узлами и вызов для каждого элемента функции типографа
+  // Перебор массива с выбранными текстовыми узлами
+  // Вызов для каждого элемента функции типографа
+  // Сранение содержимого текстового узла с результатом работы Типографа
+  // Если результат сравнения отрицательный:
+  //  — узнаём, смешанное ли содержимое (node.fontName !== figma.mixed) текстового узла или нет
+  //    — если СМЕШАННОЕ, перебираем каждый символ что бы узнать какой font family и style у символа
   for (let node of selectedTxtNodes) {
-    await figma.loadFontAsync(node.fontName);
-    node.characters = runTypograph(node.characters);
+    let typographResult = runTypograph(node.characters);
+    if (node.characters !== typographResult) {
+      if (node.fontName !== figma.mixed) {
+        // Normal content
+        await loadFont(node.fontName);
+      } else {
+        // Mixed content
+        let len = node.characters.length;
+        for (let i = 0; i < len; i++) {
+          await loadFont(node.getRangeFontName(i, i+1));
+        }
+      }
+      node.characters = typographResult;
+    }
   }
 }
 
@@ -696,8 +729,11 @@ function runTypograph(stringToParse) {
       if (p2 === undefined) {
         fractionalPart = '';
       } else {
-        fractionalPart = ',' + p4;
-        _counterReplaceDotWithComma++;
+        if (p3 == ".") {
+          p3 = ",";
+          _counterReplaceDotWithComma++;
+        } 
+        fractionalPart = p3 + p4;
       }
 
       let currencyPart = '';
@@ -960,13 +996,16 @@ function workReport() {
   if (_counterOther > 0) {
     workReportData["Разное"] = _counterOther;
   }
+  if (_counterMissingFont > 0) {
+    workReportData["Из-за&nbsp;отсутствующих шрифтов <br>текстовых слоёв не&nbsp;проверено"] = _counterMissingFont;
+  }
 
   if (Object.keys(workReportData).length == 0) {
     workReportData["Ничего не исправлено"] = 0;
   }
 }
 
-figma.ui.onmessage = message => {
+figma.ui.onmessage = (message) => {
   if (message.quitPlugin) {
     figma.closePlugin();
   }
@@ -980,11 +1019,8 @@ main().then((result) => {
   if (Object.keys(workReportData).length == 1) {
     windowHeight = 118;
   }
-  figma.showUI(__html__, { width: 360, height: windowHeight });
+  figma.showUI(__html__, { width: 380, height: windowHeight });
   figma.ui.postMessage(workReportData);
 }).catch((err) => {
   throw err;
 });
-
-
-

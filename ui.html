@@ -13,7 +13,7 @@
   .main {
     margin: 12px 16px;
     padding: 0;
-    font-family: 'Arial', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 12px;
     line-height: 1;
     background: #fff;
@@ -43,7 +43,7 @@
     bottom: 0;
     background: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 33.3%, rgba(0, 0, 0, .2) 33.3%, rgba(0, 0, 0, .2) 66.6%, rgba(0, 0, 0, 0) 66.6%, rgba(0, 0, 0, 0) 100%);
     background-size: 500% 100%;
-    animation: preloaderLine 1.5s linear infinite;
+    animation: preloaderLine 1.0s linear infinite;
   }
 
   .loading .preloader-line {
@@ -112,7 +112,7 @@
   }
 
   button {
-    font-family: 'Arial', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 100%;
     letter-spacing: 1px;
     color: #fff;
@@ -179,17 +179,7 @@
 </body>
 
 <script>
-  "use strict";
-
   let workStatisticsPlace = document.querySelector('.workStatisticsPlace');
-
-  function quitPlugin() {
-    parent.postMessage({
-      pluginMessage: {
-        quitPlugin: true
-      }
-    }, '*');
-  }
 
   onmessage = (event) => {
     let workReportData = event.data.pluginMessage;
@@ -212,4 +202,13 @@
     }
 
   }
+
+  function quitPlugin() {
+    parent.postMessage({
+      pluginMessage: {
+        quitPlugin: true
+      }
+    }, '*');
+  }
+  parent.postMessage({ pluginMessage: { startPlugin: true } }, '*')
 </script>
