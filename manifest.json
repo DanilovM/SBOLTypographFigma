@@ -2,6 +2,7 @@
   "name": "SBOL Typograph",
   "id": "907888805660596065",
   "api": "1.0.0",
+  "editorType": ["figma"],
   "main": "code.js",
   "ui": "ui.html"
 }

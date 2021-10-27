@@ -11,6 +11,7 @@ figma.showUI(__html__, { width: 380, height: 120 });
 let selectedTxtNodes = [];
 let workReportData = {};
 let loadedFonts = new Set();
+let missingFontsRowHeight = 0;
 let _nbsp = '\u00A0';
 let _counterPunctuation = 0;
 let _counterReplaceQuoteMarks = 0;
@@ -411,7 +412,7 @@ function runTypograph(stringToParse) {
     }
     function phoneNumber() {
         // Федеральный номер 8 800
-        // Формат номера 8 (800) 555-55-50
+        // Формат номера 8 800 555-55-50
         // [\+\(]?\u0020?(8)[\u0020]?[-]?[\(]?(800)[\u0020]?[-]?[\)]?[\u0020-]?(\d)[\u0020-]?(\d)[\u0020-]?(\d)[\u0020-]?(\d)[\u0020-]?(\d)[\u0020-]?(\d)[\u0020-]?(\d)
         // Пробел или неразрывный пробел
         let spaceTmpl = '[\\u0020\\u00A0]?';
@@ -426,28 +427,32 @@ function runTypograph(stringToParse) {
         let reFederal = new RegExp('(' + spaceTmpl + ')[\\+\\(]*?' + spaceTmpl + '(8)' + spaceTmpl + '' + dashTmpl + '\\(?(800)' + spaceTmpl + '' + dashTmpl + '[\\)]?' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)', 'gm');
         stringToParse = stringToParse.replace(reFederal, function (match, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10) {
             specialDash = '\u002D';
-            phoneNumber = p1 + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
+            // phoneNumber = p1 + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
+            phoneNumber = p1 + p2 + _nbsp + p3 + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
             if (match != phoneNumber) {
                 _counterPhoneNumber++;
             }
             // Заменяем - на спецсимвол
             specialDash = '<phoneDash>';
-            phoneNumber = p1 + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
+            // phoneNumber = p1 + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
+            phoneNumber = p1 + p2 + _nbsp + p3 + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
             return phoneNumber;
         });
-        // В номерах телефонов +7 (333) 333-22-22 используем дефис без пробелов
+        // В номерах телефонов +7 333 333-22-22 используем дефис без пробелов
         // +7 вместо 8
-        // Если трёхзначный код города, формат номера +7 (111) 111-11-11
-        // Если четырёхзначный код города, формат номера +7 (1111) 11-11-11
+        // Если трёхзначный код города, формат номера +7 111 111-11-11
+        // Если четырёхзначный код города, формат номера +7 1111 11-11-11
         let reRu = new RegExp('(' + spaceTmpl + ')[\\+\\(]*?' + spaceTmpl + '(7|8)' + spaceTmpl + '' + dashTmpl + '\\(?(' + dict.phoneCodeRu + ')' + spaceTmpl + '' + dashTmpl + '[\\)]?' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)?' + spaceDashTmpl + '(\\d)?', 'gm');
         stringToParse = stringToParse.replace(reRu, function (match, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10) {
             p2 = '7';
             specialDash = '\u002D';
             if (p3.length == 3) {
-                phoneNumber = p1 + '+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
+                // phoneNumber = p1 + '+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
+                phoneNumber = p1 + '+' + p2 + _nbsp + p3 + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
             }
             else if (p3.length == 4) {
-                phoneNumber = p1 + '+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
+                // phoneNumber = p1 + '+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
+                phoneNumber = p1 + '+' + p2 + _nbsp + p3 + _nbsp + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
             }
             if (match != phoneNumber) {
                 _counterPhoneNumber++;
@@ -455,10 +460,12 @@ function runTypograph(stringToParse) {
             // Заменяем - на спецсимвол
             specialDash = '<phoneDash>';
             if (p3.length == 3) {
-                phoneNumber = p1 + '+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
+                // phoneNumber = p1 +'+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
+                phoneNumber = p1 + '+' + p2 + _nbsp + p3 + _nbsp + p4 + p5 + p6 + specialDash + p7 + p8 + specialDash + p9 + p10;
             }
             else if (p3.length == 4) {
-                phoneNumber = p1 + '+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
+                // phoneNumber = p1 + '+' + p2 + _nbsp + '(' + p3 + ')' + _nbsp + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
+                phoneNumber = p1 + '+' + p2 + _nbsp + p3 + _nbsp + p4 + p5 + specialDash + p6 + p7 + specialDash + p8 + p9;
             }
             return phoneNumber;
         });
@@ -704,13 +711,90 @@ function runTypograph(stringToParse) {
         });
     }
     function misc() {
-        // СберБанк Онлайн
-        // stringToParse = stringToParse.replace(/(Сбербанк|Сбер[\u0020\u00A0]банк)/gmi, function (match, p1) {
-        //   if (match != 'СберБанк') {
-        //     _counterOther++
-        //   }
-        //   return 'СберБанк'
-        // })
+        // СберБанк
+        stringToParse = stringToParse.replace(/(Сбербанк|Сбер[\u0020\u00A0]банк)/gmi, function (match, p1) {
+            if (match != 'СберБанк') {
+                _counterOther++;
+            }
+            return 'СберБанк';
+        });
+        // Домклик
+        stringToParse = stringToParse.replace(/(DomClick|ДомКлик|Дом[\u0020\u00A0]Клик)/gmi, function (match, p1) {
+            if (match != 'Домклик') {
+                _counterOther++;
+            }
+            return 'Домклик';
+        });
+        // СберЗдоровье
+        stringToParse = stringToParse.replace(/(Сберздоровье|Docdoc|ДокДок|Сбер[\u0020\u00A0]Здоровье)/gmi, function (match, p1) {
+            if (match != 'СберЗдоровье') {
+                _counterOther++;
+            }
+            return 'СберЗдоровье';
+        });
+        // СберМаркет
+        stringToParse = stringToParse.replace(/(Сбермаркет|Сбер[\u0020\u00A0]Маркет)/gmi, function (match, p1) {
+            if (match != 'СберМаркет') {
+                _counterOther++;
+            }
+            return 'СберМаркет';
+        });
+        // СберЛогистика
+        stringToParse = stringToParse.replace(/(Сберлогистика|Сбер[\u0020\u00A0]Логистика)/gmi, function (match, p1) {
+            if (match != 'СберЛогистика') {
+                _counterOther++;
+            }
+            return 'СберЛогистика';
+        });
+        // СберФуд
+        stringToParse = stringToParse.replace(/(Сберфуд|Сбер[\u0020\u00A0]Фуд)/gmi, function (match, p1) {
+            if (match != 'СберФуд') {
+                _counterOther++;
+            }
+            return 'СберФуд';
+        });
+        // СберПрайм
+        stringToParse = stringToParse.replace(/(Сберпрайм|Сбер[\u0020\u00A0]Прайм)/gmi, function (match, p1) {
+            if (match != 'СберПрайм') {
+                _counterOther++;
+            }
+            return 'СберПрайм';
+        });
+        // СберМобайл
+        stringToParse = stringToParse.replace(/(Сбермобайл|Сбер[\u0020\u00A0]Мобайл)/gmi, function (match, p1) {
+            if (match != 'СберМобайл') {
+                _counterOther++;
+            }
+            return 'СберМобайл';
+        });
+        // СберЗвук
+        stringToParse = stringToParse.replace(/(Сберзвук|Сбер[\u0020\u00A0]Звук)/gmi, function (match, p1) {
+            if (match != 'СберЗвук') {
+                _counterOther++;
+            }
+            return 'СберЗвук';
+        });
+        // СберАвто
+        stringToParse = stringToParse.replace(/(Сберавто|Сбер[\u0020\u00A0]Авто)/gmi, function (match, p1) {
+            if (match != 'СберАвто') {
+                _counterOther++;
+            }
+            return 'СберАвто';
+        });
+        // Сбер ID
+        stringToParse = stringToParse.replace(/(СберАйди|СберID|Сбер[\u0020\u00A0]Айди)/gmi, function (match, p1) {
+            if (match != 'Сбер\u00A0ID') {
+                _counterOther++;
+            }
+            return 'Сбер\u00A0ID';
+        });
+        // SberPay
+        stringToParse = stringToParse.replace(/(Sberpay|СберПэй|Sber[\u0020\u00A0]Pay|Сбер[\u0020\u00A0]Пэй)/gmi, function (match, p1) {
+            if (match != 'SberPay') {
+                _counterOther++;
+            }
+            return 'SberPay';
+        });
         // Mastercard
         stringToParse = stringToParse.replace(/(Master[\u0020\u00A0]Card|MasterCard)/gmi, function (match, p1) {
             if (match != 'Mastercard') {
@@ -742,12 +826,23 @@ function runTypograph(stringToParse) {
             }
             return 'Apple\u00A0Pay';
         });
-        // Push-уведомления
-        stringToParse = stringToParse.replace(/(push|пуш)([\u0020\u00A0\u002D\u2012\u2013\u2014])(уведомлен)([ие|ия|ий|ию|иям|ием|иями|ии|иях])/gmi, function (match, p1, p2, p3, p4) {
-            if ((p1 + p2 + p3) != 'Push-уведомлен') {
+        // пуш-уведомление
+        stringToParse = stringToParse.replace(/((^|\n|[\.\!\?\…][\u0020\u00A0])(\u2014[\u0020\u00A0])?)?(push|пуш)([\u0020\u00A0\u002D\u2012\u2013\u2014])(уведомлен)([ие|ия|ий|ию|иям|ием|иями|ии|иях])?/gmi, function (match, p1, p2, p3, p4, p5, p6, p7) {
+            let sim;
+            if (p1 !== undefined) {
+                sim = 'Пуш-уведомлен';
+            }
+            else {
+                sim = 'пуш-уведомлен';
+                p1 = '';
+            }
+            if ((p4 + p5 + p6) != sim) {
                 _counterOther++;
             }
-            return 'Push-' + p3.toLowerCase() + p4.toLowerCase();
+            if (p7 === undefined) {
+                p7 = '';
+            }
+            return p1 + sim + p7.toLowerCase();
         });
         // ПИН-код
         stringToParse = stringToParse.replace(/(pin|пин)([\u0020\u00A0\u002D\u2012\u2013\u2014])(код)([ы|а|ов|у|ам|ы|ом|ами|е|ах])?/gmi, function (match, p1, p2, p3, p4) {
@@ -954,6 +1049,7 @@ function workReport() {
     }
     if (_counterMissingFont > 0) {
         workReportData["Из-за&nbsp;отсутствующих шрифтов <br>текстовых слоёв не&nbsp;проверено"] = _counterMissingFont;
+        missingFontsRowHeight = 15;
     }
     if (Object.keys(workReportData).length == 0) {
         workReportData["Ничего не исправлено"] = 0;
@@ -966,13 +1062,13 @@ figma.ui.onmessage = (message) => {
 };
 main().then((result) => {
     workReport();
-    let workReportItemHeight = 28;
-    let buttonPlaceHeight = 54 + 12;
-    let windowHeight = Object.keys(workReportData).length * workReportItemHeight + buttonPlaceHeight + 8 + 8;
+    let workReportItemHeight = 33;
+    let buttonPlaceHeight = 56;
+    let windowHeight = Object.keys(workReportData).length * workReportItemHeight + buttonPlaceHeight + missingFontsRowHeight + 16;
     if (Object.keys(workReportData).length == 1) {
         windowHeight = 118;
     }
-    figma.showUI(__html__, { width: 380, height: windowHeight });
+    figma.showUI(__html__, { width: 340, height: windowHeight });
     figma.ui.postMessage(workReportData);
 }).catch((err) => {
     throw err;

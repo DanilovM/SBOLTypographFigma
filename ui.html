@@ -3,82 +3,22 @@
     margin: 0;
   }
 
-  body.loading {
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
   .main {
-    margin: 12px 16px;
+    margin: 12px;
     padding: 0;
     font-family: 'Roboto', sans-serif;
     font-size: 12px;
-    line-height: 1;
     background: #fff;
     color: #333333;
   }
 
-  .logo {
-    display: inline-block;
-    background-color: #21A038;
-    padding: 4px;
-    border-radius: 4px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .loading .logo svg {
-    width: 48px;
-    height: 48px;
-  }
-
-  .preloader-line {
-    display: none;
-    width: 100%;
-    height: 3px;
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 33.3%, rgba(0, 0, 0, .2) 33.3%, rgba(0, 0, 0, .2) 66.6%, rgba(0, 0, 0, 0) 66.6%, rgba(0, 0, 0, 0) 100%);
-    background-size: 500% 100%;
-    animation: preloaderLine 1.0s linear infinite;
-  }
-
-  .loading .preloader-line {
-    display: block;
-  }
-
-  @keyframes preloaderLine {
-    0% {
-      background-position: 100% 0%;
-    }
-
-    100% {
-      background-position: 0% 0%;
-    }
-  }
-
   .workPlace {
     display: flex;
-  }
-
-  .leftColumn {
-    margin-right: 12px;
-  }
-
-  .loading .leftColumn {
-    margin: 0;
-    display: inline-block;
-    transform: translateZ(1px);
-  }
-
-  .rightColumn {
-    width: 100%;
+    flex-direction: column;
   }
 
   .workReportItem {
+    width: 100%;
     padding: 8px 0;
     display: flex;
     justify-content: space-between;
@@ -100,15 +40,10 @@
   .buttonPlace {
     width: 100%;
     text-align: center;
-    margin-top: 12px;
     position: absolute;
     bottom: 0;
     left: 0;
     box-shadow: 0 -1px 5px rgba(0, 0, 0, .2);
-  }
-
-  .loading .buttonPlace {
-    display: none;
   }
 
   button {
@@ -143,35 +78,9 @@
   }
 </style>
 
-<body class="body loading">
+<body class="body">
   <div class=main>
-    <div class=workPlace>
-      <div class=leftColumn>
-        <div class=logo>
-          <svg width="32" height="32" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M24.7593 84L16.04 69.5332L24.6947 55H17.913L9 69.6659L17.7839 84H24.7593Z" fill="white" />
-            <path d="M39.1622 84L30.443 69.5332L39.0976 55H32.316L23.403 69.6659L32.1868 84H39.1622Z" fill="white" />
-            <path
-              d="M79.3354 86.7956V80.3842H57.8925V66.7109H77.3332V60.4304H57.8925V47.4114H79.3354V41H50.6587V86.7956H79.3354Z"
-              fill="white" />
-            <path d="M109.691 84L118.411 69.6659L109.498 55H102.716L111.435 69.5332L102.651 84H109.691Z" fill="white" />
-            <path d="M95.2884 84L104.008 69.6659L95.0947 55H88.313L97.0323 69.5332L88.2484 84H95.2884Z" fill="white" />
-            <path
-              d="M58 37C60.2091 37 62 35.2091 62 33C62 30.7909 60.2091 29 58 29C55.7909 29 54 30.7909 54 33C54 35.2091 55.7909 37 58 37Z"
-              fill="white" />
-            <path
-              d="M71 37C73.2091 37 75 35.2091 75 33C75 30.7909 73.2091 29 71 29C68.7909 29 67 30.7909 67 33C67 35.2091 68.7909 37 71 37Z"
-              fill="white" />
-          </svg>
-          <div class="splashScreen__preloader"></div>
-          <div class="preloader-line"></div>
-        </div>
-      </div>
-      <div class=rightColumn>
-        <div class=workStatisticsPlace></div>
-      </div>
-    </div>
-
+    <div class=workPlace></div>
     <div class="buttonPlace"><button onclick="quitPlugin()">Закрыть</button></div>
 
   </div>
@@ -179,17 +88,16 @@
 </body>
 
 <script>
-  let workStatisticsPlace = document.querySelector('.workStatisticsPlace');
+  let workPlace = document.querySelector('.workPlace');
 
   onmessage = (event) => {
     let workReportData = event.data.pluginMessage;
-    document.querySelector('.body').classList.remove('loading');
     for (let key in workReportData) {
       if ("Ничего не исправлено" in workReportData) {
-        workStatisticsPlace.insertAdjacentHTML("beforeEnd",
+        workPlace.insertAdjacentHTML("beforeEnd",
           "<div class=workReportItem><span class=workReportItem__key>" + key + "</span></div>");
       } else {
-        workStatisticsPlace.insertAdjacentHTML("beforeEnd",
+        workPlace.insertAdjacentHTML("beforeEnd",
           "<div class=workReportItem><span class=workReportItem__key>" + key +
           "</span><span class=workReportItem__value>" + workReportData[key] + "</span></div>");
       }
@@ -198,6 +106,8 @@
 
     if (Object.keys(workReportData).length == 1) {
       document.querySelector('.workPlace').style.alignItems = 'center';
+      document.querySelector('.workPlace').style.height = '37px';
+      document.querySelector('.workPlace').style.flexDirection = 'inherit';
       document.querySelector('.workReportItem').style.padding = 0;
     }
 
@@ -210,5 +120,9 @@
       }
     }, '*');
   }
-  parent.postMessage({ pluginMessage: { startPlugin: true } }, '*')
+  parent.postMessage({
+    pluginMessage: {
+      startPlugin: true
+    }
+  }, '*')
 </script>
