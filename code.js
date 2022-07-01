@@ -411,6 +411,7 @@ function runTypograph(stringToParse) {
         });
     }
     function phoneNumber() {
+        // https://www.regexpal.com/
         // Федеральный номер 8 800
         // Формат номера 8 800 555-55-50
         // [\+\(]?\u0020?(8)[\u0020]?[-]?[\(]?(800)[\u0020]?[-]?[\)]?[\u0020-]?(\d)[\u0020-]?(\d)[\u0020-]?(\d)[\u0020-]?(\d)[\u0020-]?(\d)[\u0020-]?(\d)[\u0020-]?(\d)
@@ -1004,7 +1005,7 @@ function runTypograph(stringToParse) {
     numbers();
     lowerCase();
     misc();
-    removeEndDotInSingleString();
+    // removeEndDotInSingleString();
     return stringToParse;
 }
 function workReport() {
