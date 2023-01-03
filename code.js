@@ -425,23 +425,23 @@ function runTypograph(stringToParse) {
         // Специальный символ для тире в тел. номере. Нужен, что бы при замене тире, не менялся на среднее тире между цифрами
         // В конце функции dash() заменится обратно на -
         let specialDash = '';
-        let reFederal = new RegExp('(^|[\\u0020\\u00A0\\"«“‘„\\(\\[])(' + spaceTmpl + ')[\\+\\(]*?' + spaceTmpl + '(8)' + spaceTmpl + '' + dashTmpl + '\\(?(800)' + spaceTmpl + '' + dashTmpl + '[\\)]?' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)([\\u0020\\u00A0\\…\\,\\;\\:\\?\\!\\"»“‘\\)\\]]|$)', 'gm');
-        stringToParse = stringToParse.replace(reFederal, function (match, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11) {
+        let reFederal = new RegExp('(^|[\\u0020\\u00A0\\"«“‘„\\(\\[])(' + spaceTmpl + ')[\\+\\(]*?' + spaceTmpl + '(8)' + spaceTmpl + '' + dashTmpl + '\\(?(800)' + spaceTmpl + '' + dashTmpl + '[\\)]?' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)([\\u0020\\u00A0\\.\\…\\,\\;\\:\\?\\!\\"»“‘\\)\\]]|$)', 'gm');
+        stringToParse = stringToParse.replace(reFederal, function (match, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12) {
             specialDash = '\u002D';
-            phoneNumber = p1 + p2 + p3 + _nbsp + p4 + _nbsp + p5 + p6 + p7 + specialDash + p8 + p9 + specialDash + p10 + p11;
+            phoneNumber = p1 + p2 + p3 + _nbsp + p4 + _nbsp + p5 + p6 + p7 + specialDash + p8 + p9 + specialDash + p10 + p11 + p12;
             if (match != phoneNumber) {
                 _counterPhoneNumber++;
             }
             // Заменяем - на спецсимвол
             specialDash = '<phoneDash>';
-            phoneNumber = p1 + p2 + p3 + _nbsp + p4 + _nbsp + p5 + p6 + p7 + specialDash + p8 + p9 + specialDash + p10 + p11;
+            phoneNumber = p1 + p2 + p3 + _nbsp + p4 + _nbsp + p5 + p6 + p7 + specialDash + p8 + p9 + specialDash + p10 + p11 + p12;
             return phoneNumber;
         });
         // В номерах телефонов +7 333 333-22-22 используем дефис без пробелов
         // +7 вместо 8
         // Если трёхзначный код города, формат номера +7 111 111-11-11
         // Если четырёхзначный код города, формат номера +7 1111 11-11-11
-        let reRu = new RegExp('(^|[\\u0020\\u00A0\\"«“‘„\\(\\[])(' + spaceTmpl + ')[\\+\\(]*?' + spaceTmpl + '(7|8)' + spaceTmpl + '' + dashTmpl + '\\(?(' + dict.phoneCodeRu + ')' + spaceTmpl + '' + dashTmpl + '[\\)]?' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)?' + spaceDashTmpl + '(\\d)?([\\u0020\\u00A0\\…\\,\\;\\:\\?\\!\\"»“‘\\)\\]]|$)', 'gm');
+        let reRu = new RegExp('(^|[\\u0020\\u00A0\\"«“‘„\\(\\[])(' + spaceTmpl + ')[\\+\\(]*?' + spaceTmpl + '(7|8)' + spaceTmpl + '' + dashTmpl + '\\(?(' + dict.phoneCodeRu + ')' + spaceTmpl + '' + dashTmpl + '[\\)]?' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)' + spaceDashTmpl + '(\\d)?' + spaceDashTmpl + '(\\d)?([\\u0020\\u00A0\\.\\…\\,\\;\\:\\?\\!\\"»“‘\\)\\]]|$)', 'gm');
         stringToParse = stringToParse.replace(reRu, function (match, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12) {
             p3 = '7';
             specialDash = '\u002D';
