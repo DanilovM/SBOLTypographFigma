@@ -614,6 +614,7 @@ function runTypograph(stringToParse) {
     // Заменяем <phoneDash> из функции phoneNumber() на короткое тире
     stringToParse = stringToParse.replace(/<phoneDash>/gm, function (match, p1) {
       return '\u002D';
+      // return '\u2011'; Неразрывный дефис ‑
     });
 
   }
@@ -622,31 +623,26 @@ function runTypograph(stringToParse) {
     // Слова «вы», «банк», «приложение», «условия», «сайт» — со строчной (маленькой) буквы.
     // Обращение на «вы» с прописной буквы, только если «вы» — первое слово в предложении.
 
-    function toLowerCase(params) {
+    function changeToLowerCase(params) {
       // Находим первое слово из списка в предложении и отмечаем его как не изменяемое
-      let regexp = new RegExp('(^|[\\.\\!\\?\\…][\\u0020\\u00A0])(\\u2014[\\u0020\\u00A0])?(' + params + ')(?=[\\u0020\\u00A0\\…\\,\\;\\:\\?\\!\\"»“‘\\)\\]])', 'gm');
-      stringToParse = stringToParse.replace(regexp, function (match, p1, p2, p3) {
-        if (p2 === undefined) {
-          p2 = '';
-        }
-        return p1 + p2 + '<noReplace>' + p3 + '<noReplace>';
-      });
+      let regexp = new RegExp('(?<=^|^\\u2014\\s|^[«„\\"]|[\\.\\!\\?\\…]\\s[«„\\"]?(?:[\\u002D\\u2012\\u2013\\u2014]\\s)?)(' + params + ')(?=[\\s\\.\\…\\,\\;\\:\\?\\!\\"»“‘])', 'gm');
+      stringToParse = stringToParse.replace(regexp, '<noReplace>$1<noReplace>');
 
       // Заменяем все вхождения из списка на нижний регистр
-      regexp = new RegExp('(^|[\\u0020\\u00A0«„\\"\\(\\[])(' + params + ')(?=[\\u0020\\u00A0\\…\\,\\;\\:\\?\\!\\"»“‘\\)\\]])', 'gm');
-      stringToParse = stringToParse.replace(regexp, function (match, p1, p2) {
+      regexp = new RegExp('(?<=[\\s«„\\"\\(\\[])(' + params + ')(?=[\\s\\.\\…\\,\\;\\:\\?\\!\\"»“‘\\)\\]])', 'gm');
+      stringToParse = stringToParse.replace(regexp, function (match, p1) {
         _counterLowerCase++;
-        return p1 + p2.toLowerCase();
+        return p1.toLowerCase();
       });
 
       // Удаляем маркер
       stringToParse = stringToParse.replace(/<noReplace>/g, "");
     }
-    toLowerCase('Вы|Вас|Вам|Вами|Ваш|Ваше|Вашего|Ваша|Вашей|Ваши|Ваших');
-    toLowerCase('Банк|Банки|Банка|Банков|Банку|Банкам|Банком|Банками|Банке|Банках');
-    toLowerCase('Приложение|Приложения|Приложений|Приложению|Приложениям|Приложением|Приложениями|Приложении|Приложениях|Приложении');
-    toLowerCase('Условие|Условия|Условий|Условию|Условиям|Условием|Условиями|Условии|Условиях');
-    toLowerCase('Сайт|Сайта|Сайту|Сайтом|Сайте|Сайты|Сайтов|Сайтам|Сайты|Сайтами|Сайтах');
+    changeToLowerCase('Вы|Вас|Вам|Вами|Ваш|Ваше|Вашего|Ваша|Вашей|Ваши|Ваших');
+    changeToLowerCase('Банк|Банки|Банка|Банков|Банку|Банкам|Банком|Банками|Банке|Банках');
+    changeToLowerCase('Приложение|Приложения|Приложений|Приложению|Приложениям|Приложением|Приложениями|Приложении|Приложениях|Приложении');
+    changeToLowerCase('Условие|Условия|Условий|Условию|Условиям|Условием|Условиями|Условии|Условиях');
+    changeToLowerCase('Сайт|Сайта|Сайту|Сайтом|Сайте|Сайты|Сайтов|Сайтам|Сайты|Сайтами|Сайтах');
   }
 
   function currency() {
