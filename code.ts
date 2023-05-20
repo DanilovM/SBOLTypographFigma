@@ -617,6 +617,30 @@ function runTypograph(stringToParse) {
       // return '\u2011'; Неразрывный дефис ‑
     });
 
+    // Неразрывный дефис ‑ \u2011 
+    // ПОСЛЕ приставок по- в- во- кое-
+    // ПЕРЕД суфиксами -то -либо -нибудь и частицами -де -ка -с -таки 
+    function nonBreakingHyphe(params, position) {
+      let regexp;
+
+      // ПОСЛЕ приставок по- в- во- кое-
+      // Ищем: (начало строки или [пробел или кавычки или скобки]) (подстрока) (варианты тире) (любая буква)
+      if (position == 'before') regexp = new RegExp('(?<=(?:^|[\\s«„\\"\\(\\[])(?:' + params + '))(' + dashAll + ')(?=[А-ЯЁа-яё])', 'gmi');
+      
+      // ПЕРЕД суфиксами -то -либо -нибудь и частицами -де -ка -с -таки
+      // Ищем: (любая буква) (варианты тире) (подстрока) [конец слова]
+      if (position == 'after') regexp = new RegExp('(?<=[А-ЯЁа-яё])(' + dashAll + ')(?=(?:' + params + ')[\\s\\.\\…\\,\\;\\:\\?\\!\\"»“‘\\)\\]])', 'gmi');
+      
+      stringToParse = stringToParse.replace(regexp, function (match, p1) {
+        _counterDash++;
+        return '\u2011';
+      });
+
+    }
+
+    nonBreakingHyphe('по|в|во|кое', 'before');
+    nonBreakingHyphe('то|либо|нибудь|де|ка|с|таки', 'after');
+
   }
 
   function lowerCase() {
@@ -625,7 +649,7 @@ function runTypograph(stringToParse) {
 
     function changeToLowerCase(params) {
       // Находим первое слово из списка в предложении и отмечаем его как не изменяемое
-      let regexp = new RegExp('(?<=^|^\\u2014\\s|^[«„\\"]|[\\.\\!\\?\\…]\\s[«„\\"]?(?:[\\u002D\\u2012\\u2013\\u2014]\\s)?)(' + params + ')(?=[\\s\\.\\…\\,\\;\\:\\?\\!\\"»“‘])', 'gm');
+      let regexp = new RegExp('(?<=^|^\\u002D\\u2012\\u2013\\u2014\\s|^[«„\\"]|[\\.\\!\\?\\…]\\s[«„\\"]?(?:[\\u002D\\u2012\\u2013\\u2014]\\s)?)(' + params + ')(?=[\\s\\.\\…\\,\\;\\:\\?\\!\\"»“‘])', 'gm');
       stringToParse = stringToParse.replace(regexp, '<noReplace>$1<noReplace>');
 
       // Заменяем все вхождения из списка на нижний регистр
