@@ -411,7 +411,9 @@ function runTypograph(stringToParse) {
                 p2 = wordAllCase;
                 _counterYO++;
             }
-            return p2;
+            if (p1 === undefined)
+                p1 = '';
+            return p1 + p2;
         });
     }
     function phoneNumber() {

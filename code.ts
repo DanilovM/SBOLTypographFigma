@@ -431,11 +431,12 @@ function runTypograph(stringToParse) {
         // Если в начале идёт ЦИФРА, а за ней слово СЕК, считаем, что это сокращение секунд и ничего не меняем
         if (p1 !== undefined && p2 == 'сек') {
           return p1 + p2;
-        }
+        }        
         p2 = wordAllCase;
         _counterYO++;
       }
-      return p2;
+      if (p1 === undefined) p1 = '';
+      return p1 + p2;
     });
   }
 
