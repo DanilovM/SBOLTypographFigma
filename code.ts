@@ -398,25 +398,25 @@ function runTypograph(stringToParse) {
   }
 
   function YO() {
-    stringToParse = stringToParse.replace(/([А-ЯЁа-яё]+)/gim, function (match, p1) {
+    stringToParse = stringToParse.replace(/(\d\s?)?([А-ЯЁа-яё]+)/gim, function (match, p1, p2) {
       // Если слово есть в yoDict, заменяем его
-      let wordLower = p1.toLowerCase();
+      let wordLower = p2.toLowerCase();
       let wordAllCase = '';
       if (_yoDict.has(wordLower)) {
         let yoDictWord = _yoDict.get(wordLower);
         for (let i = 0; i < wordLower.length; i++) {
-          if (p1[i] == yoDictWord[i]) {
-            // Буква из слова равна букве из словарного слова
-            wordAllCase = wordAllCase + p1[i];
+          if (p2[i] == yoDictWord[i]) {
+          // Буква из слова равна букве из словарного слова
+          wordAllCase = wordAllCase + p2[i];
           } else {
             // Буквы не совпадают. Или не тот регистр или е ё
             // Узнаём регистр буквы основного слова
-            if (p1[i] === p1[i].toUpperCase()) {
+            if (p2[i] === p2[i].toUpperCase()) {
               // в верхнем --------------
-              if (p1[i] === yoDictWord[i].toUpperCase()) {
+              if (p2[i] === yoDictWord[i].toUpperCase()) {
                 // Сравниваем букву в верхнем регистре основного слова с буквой в верхнем регистре словарного слова
                 // Если совпадают, дописываем
-                wordAllCase = wordAllCase + p1[i];
+                wordAllCase = wordAllCase + p2[i];
               } else {
                 // Не совпадают, значит это замена е на ё
                 wordAllCase = wordAllCase + yoDictWord[i].toUpperCase();
@@ -428,12 +428,15 @@ function runTypograph(stringToParse) {
             }
           }
         }
-        p1 = wordAllCase;
+        // Если в начале идёт ЦИФРА, а за ней слово СЕК, считаем, что это сокращение секунд и ничего не меняем
+        if (p1 !== undefined && p2 == 'сек') {
+          return p1 + p2;
+        }
+        p2 = wordAllCase;
         _counterYO++;
       }
-      return p1;
+      return p2;
     });
-
   }
 
   function phoneNumber() {
@@ -653,7 +656,7 @@ function runTypograph(stringToParse) {
       stringToParse = stringToParse.replace(regexp, '<noReplace>$1<noReplace>');
 
       // Заменяем все вхождения из списка на нижний регистр
-      regexp = new RegExp('(?<=[\\s«„\\"\\(\\[])(' + params + ')(?=[\\s\\.\\…\\,\\;\\:\\?\\!\\"»“‘\\)\\]])', 'gm');
+      regexp = new RegExp('(?<=[\\s\\(\\[])(' + params + ')(?=[\\s\\.\\…\\,\\;\\:\\?\\!\\"»“‘\\)\\]])', 'gm');
       stringToParse = stringToParse.replace(regexp, function (match, p1) {
         _counterLowerCase++;
         return p1.toLowerCase();
@@ -793,12 +796,23 @@ function runTypograph(stringToParse) {
   }
 
   function misc() {
-    // СберБанк
-    stringToParse = stringToParse.replace(/(Сбербанк|Сбер[\u0020\u00A0]банк)/gmi, function (match, p1) {
+    // Сбер банк - СберБанк
+    stringToParse = stringToParse.replace(/Сбер\sбанк/g, "Сбербанк");
+
+    // СберБанк. Ищем Сбербанк перед которым нет ПАО
+    stringToParse = stringToParse.replace(/(?<!ПАО\s)(Сбербанк)/gmi, function (match, p1) {
       if (match != 'СберБанк') {
         _counterOther++;
       }
       return 'СберБанк';
+    })
+
+    // ПАО Сбербанк
+    stringToParse = stringToParse.replace(/(ПАО\s)(Сбербанк)/gmi, function (match, p1, p2) {
+      if (p2 != 'Сбербанк') {
+        _counterOther++;
+      }
+      return p1 + 'Сбербанк';
     })
 
     // Домклик
