@@ -8,5 +8,10 @@
   "networkAccess": {
     "allowedDomains": ["none"]
   },
+  "menu": [
+    {"name": "SBOL Typograph", "command": "run"},
+    {"separator": true},
+    {"name": "⚙️ Настройки", "command": "settings"}
+  ],
   "documentAccess": "dynamic-page"
 }

@@ -76,6 +76,69 @@
   button:focus {
     outline: none;
   }
+
+  .customSwitch {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+  .customSwitch__checkbox {    
+    display: flex;
+    align-items: center;
+    position: relative;
+    border: none;
+    height: 18px;
+    width: 32px;
+    margin: 2px 0 2px 16px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+  }
+
+  .customSwitch__checkbox::before {
+    content: '';
+    display: block;
+    width: 30px;
+    height: 18px;
+    border-radius: 16px;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, .2);
+    -webkit-transition: all .3s;
+    transition: all .3s;
+    position: absolute;
+    left: 0;
+  }
+
+  .customSwitch__checkbox::after {
+    content: '';
+    display: block;
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background-color: rgba(0, 0, 0, .2);
+    border-radius: 50%;
+    top: 2px;
+    left: 3px;
+    -webkit-transition: all .3s;
+    transition: all .3s;
+  }
+
+  .customSwitch__checkbox:checked {
+    color: #21A038;
+  }
+
+  .customSwitch__checkbox:checked::before {
+    background: #21A038;
+    border: 1px solid #21A038;
+  }
+
+  .customSwitch__checkbox:checked::after {
+    left: 15px;
+    background-color: #fff;
+  }
+
 </style>
 
 <body class="body">
@@ -90,8 +153,26 @@
 <script>
   let workPlace = document.querySelector('.workPlace');
 
-  onmessage = (event) => {
-    let workReportData = event.data.pluginMessage;
+  // ***************************************************************************
+  //                         Получение и обработка сообщений из code.js
+  // ***************************************************************************
+  onmessage = event => {
+
+  let message = event.data.pluginMessage;
+  let action = message.action;
+
+  switch (action) {
+    case "statistics":
+      showStatistics(message.data);
+      break;
+    case "settings":
+      pluginSettings(message.data);
+      break;
+  }
+  }
+  // ***************************************************************************
+  
+  function showStatistics (workReportData) {
     for (let key in workReportData) {
       if ("Ничего не исправлено" in workReportData) {
         workPlace.insertAdjacentHTML("beforeEnd",
@@ -110,19 +191,61 @@
       document.querySelector('.workPlace').style.flexDirection = 'inherit';
       document.querySelector('.workReportItem').style.padding = 0;
     }
+  }
 
+  function pluginSettings(settingsData) {
+    workPlace.insertAdjacentHTML("beforeEnd",
+          "<div class=workReportItem><label class=customSwitch>Исправлять Е на Ё<input type=checkbox class=customSwitch__checkbox name=yo></label></div>");
+    workPlace.insertAdjacentHTML("beforeEnd",
+          "<div class=workReportItem><label class=customSwitch>Исправлять кавычки<input type=checkbox class=customSwitch__checkbox name=quotemarks></label></div>");
+    workPlace.insertAdjacentHTML("beforeEnd",
+          "<div class=workReportItem><label class=customSwitch>Исправлять телефонные номера<input type=checkbox class=customSwitch__checkbox name=phone></label></div>");
+    workPlace.insertAdjacentHTML("beforeEnd",
+          "<div class=workReportItem><label class=customSwitch>Показывать результат работы плагина<input type=checkbox class=customSwitch__checkbox name=showresult></label></div>");
+    
+    function pluginSettingsInit() {
+      let elmName;
+      // Перебор каждого свитча
+      document.querySelectorAll(".customSwitch__checkbox").forEach((elem) => {
+        // По имени текущего чекбокса выбираем значение для checked из переданных настроек
+        elemName = elem.name;
+        
+        elem.checked = settingsData[elemName];
+        
+        // Вешаем на свитч\чекбокс обработчик
+        elem.addEventListener('change', () => {
+          pluginSettingsUpdate(elem)
+        });
+        
+      });
+
+    }
+    pluginSettingsInit();
+
+    function pluginSettingsUpdate(elem) {
+      // По состоянию переданного чекбокса обновляем настройки в CODE
+      let elemName = elem.name;
+      settingsData[elemName] = elem.checked;
+      parent.postMessage({
+        pluginMessage: {
+          action: "saveSettings",
+          settingsData: settingsData
+        }
+      }, '*');      
+    }
   }
 
   function quitPlugin() {
     parent.postMessage({
       pluginMessage: {
-        quitPlugin: true
+        action: "closePlugin"
       }
     }, '*');
   }
-  parent.postMessage({
-    pluginMessage: {
-      startPlugin: true
-    }
-  }, '*')
+
+  // parent.postMessage({
+  //   pluginMessage: {
+  //     startPlugin: true
+  //   }
+  // }, '*')
 </script>
