@@ -39,24 +39,23 @@ let settingsValuesLocal = {
 // Инициализация настроек плагина
 function initPluginSettings() {
     return __awaiter(this, void 0, void 0, function* () {
+        let settingsValuesSaved;
+        settingsValuesSaved = yield figma.clientStorage.getAsync('settings');
         // Если сохранённые значения есть
-        if (yield figma.clientStorage.getAsync('settings')) {
+        if (settingsValuesSaved) {
             // Сравниваем ключи из локальных и сохранённых значений. Записываем в локальные значения из сохранённых. Перезаписываем сохранённые значения локальными. 
-            // На случай, если настройки изменились. Что бы было актуальное количество настроек.
-            let settingsValuesSaved = yield figma.clientStorage.getAsync('settings');
+            // На случай, если настройки изменились. Что бы было актуальное количество настроек.    
             for (const key in settingsValuesLocal) {
                 if (key in settingsValuesSaved) {
                     settingsValuesLocal[key] = settingsValuesSaved[key];
                 }
             }
-            yield figma.clientStorage.setAsync('settings', settingsValuesLocal);
         }
-        else {
-            // Если нет сохранённых значений настроек, записываем их из локальных
-            yield figma.clientStorage.setAsync('settings', settingsValuesLocal);
-        }
+        yield figma.clientStorage.setAsync('settings', settingsValuesLocal);
+        console.log();
     });
 }
+;
 // Инициализация словарей
 const dict = {
     // Месяц
@@ -86,6 +85,7 @@ function createYoDict() {
         _yoDict.set(word.replace(/ё/g, "е"), word);
     }
 }
+;
 // Заполняем массив выбранными текстовыми узлами
 function findSelectedTextNodes(selected) {
     if (selected.type == 'TEXT') {
@@ -101,6 +101,7 @@ function findSelectedTextNodes(selected) {
         selected.children.forEach(findSelectedTextNodes);
     }
 }
+;
 // Загрузка шрифтов
 function loadFont(fontToCheck) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -110,8 +111,10 @@ function loadFont(fontToCheck) {
             loadedFonts.add(fontFamilyStyle);
             yield figma.loadFontAsync(fontToCheck);
         }
+        console.log();
     });
 }
+;
 // Запуск Типографа
 function launchTypograph(stringToParse) {
     function punctuation() {
@@ -1074,6 +1077,7 @@ function launchTypograph(stringToParse) {
     // removeEndDotInSingleString();
     return stringToParse;
 }
+;
 // Статистика работы
 function workStatistics() {
     if (_counterPunctuation > 0) {
@@ -1124,21 +1128,24 @@ function workStatistics() {
         closePluginMessage = "Ничего не исправлено";
     }
 }
+;
 // Запуск плагина
 function runPlugin() {
     return __awaiter(this, void 0, void 0, function* () {
+        yield initPluginSettings();
+        let page = figma.currentPage;
+        yield page.loadAsync();
         // В начале определяем, что выбрано
-        if (figma.currentPage.selection.length === 0) {
+        if (page.selection.length === 0) {
             // Ничего не выбрано, ищем по всей странице
-            findSelectedTextNodes(figma.currentPage);
+            findSelectedTextNodes(page);
         }
         else {
             // Выбрано несколько узлов
-            for (let node of figma.currentPage.selection) {
+            for (let node of page.selection) {
                 findSelectedTextNodes(node);
             }
         }
-        yield initPluginSettings();
         // Заполняем словарь Ёфикатора
         createYoDict();
         // Перебор массива с выбранными текстовыми узлами
@@ -1181,6 +1188,7 @@ function runPlugin() {
         }
     });
 }
+;
 // Работаем с настройками плагина
 function runPluginSettings() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -1190,12 +1198,14 @@ function runPluginSettings() {
         figma.ui.postMessage({ action: "settings", data: settingsValuesLocal });
     });
 }
+;
 // Сохраняем переданные из UI настройки
 function savePluginSettings(settingsValues) {
     return __awaiter(this, void 0, void 0, function* () {
         yield figma.clientStorage.setAsync('settings', settingsValues);
     });
 }
+;
 // Если в меню выбрано "SBOL Typograph"
 if (figma.command === "run") {
     runPlugin();
@@ -1216,3 +1226,4 @@ figma.ui.onmessage = (message) => {
             break;
     }
 };
+console.clear();

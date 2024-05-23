@@ -34,22 +34,23 @@ let settingsValuesLocal = {
 
 // Инициализация настроек плагина
 async function initPluginSettings() {
+  let settingsValuesSaved;
+  settingsValuesSaved = await figma.clientStorage.getAsync('settings');
+
   // Если сохранённые значения есть
-  if (await figma.clientStorage.getAsync('settings')) {    
+  if (settingsValuesSaved) {
     // Сравниваем ключи из локальных и сохранённых значений. Записываем в локальные значения из сохранённых. Перезаписываем сохранённые значения локальными. 
-    // На случай, если настройки изменились. Что бы было актуальное количество настроек.
-    let settingsValuesSaved = await figma.clientStorage.getAsync('settings');    
+    // На случай, если настройки изменились. Что бы было актуальное количество настроек.    
     for (const key in settingsValuesLocal) {
       if (key in settingsValuesSaved) {
         settingsValuesLocal[key] = settingsValuesSaved[key];
       }
     }
-    await figma.clientStorage.setAsync('settings', settingsValuesLocal);
-  } else {
-    // Если нет сохранённых значений настроек, записываем их из локальных
-    await figma.clientStorage.setAsync('settings', settingsValuesLocal);
   }
-}
+  
+  await figma.clientStorage.setAsync('settings', settingsValuesLocal);  
+  console.log();
+};
 
 // Инициализация словарей
 const dict = {
@@ -80,7 +81,7 @@ function createYoDict() {
   for (let word of yoData) {
     _yoDict.set(word.replace(/ё/g, "е"), word);
   }
-}
+};
 
 // Заполняем массив выбранными текстовыми узлами
 function findSelectedTextNodes(selected) {
@@ -92,10 +93,11 @@ function findSelectedTextNodes(selected) {
       _counterMissingFont++;
     }
   }
+  
   if (selected.children) {
     selected.children.forEach(findSelectedTextNodes);
   }
-}
+};
 
 // Загрузка шрифтов
 async function loadFont(fontToCheck) {
@@ -105,10 +107,11 @@ async function loadFont(fontToCheck) {
       loadedFonts.add(fontFamilyStyle);
       await figma.loadFontAsync(fontToCheck);
     }
-}
-// Запуск Типографа
-function launchTypograph(stringToParse) {
+    console.log();
+};
 
+// Запуск Типографа
+function launchTypograph(stringToParse: string) {
   function punctuation() {
     // Заменяем ...? ⟶ ?‥ и ...! ⟶ !‥
     stringToParse = stringToParse.replace(/(\.{2,}|…)(\!|\?)/gm, function (match, p1, p2) {
@@ -1166,7 +1169,7 @@ function launchTypograph(stringToParse) {
   // removeEndDotInSingleString();
 
   return stringToParse;
-}
+};
 
 // Статистика работы
 function workStatistics() {
@@ -1218,27 +1221,31 @@ function workStatistics() {
     workReportData["Ничего не исправлено"] = 0;
     closePluginMessage = "Ничего не исправлено";
   }
-}
+};
 
 // Запуск плагина
 async function runPlugin() {
+  await initPluginSettings();
+  
+  let page = figma.currentPage;
+  
+  await page.loadAsync();
+  
   // В начале определяем, что выбрано
-  if (figma.currentPage.selection.length === 0) {
+  if (page.selection.length === 0) {
     // Ничего не выбрано, ищем по всей странице
-    findSelectedTextNodes(figma.currentPage);
+    findSelectedTextNodes(page);
   } else {
     // Выбрано несколько узлов
-    for (let node of figma.currentPage.selection) {
+    for (let node of page.selection) {
       findSelectedTextNodes(node);
     }
   }
   
-  await initPluginSettings();
-  
   // Заполняем словарь Ёфикатора
   createYoDict();
-  
-  // Перебор массива с выбранными текстовыми узлами
+
+    // Перебор массива с выбранными текстовыми узлами
   // Вызов для каждого элемента функции типографа
   // Сранение содержимого текстового узла с результатом работы Типографа
   // Если результат сравнения отрицательный:
@@ -1249,12 +1256,12 @@ async function runPlugin() {
     if (node.characters !== typographResult) {
       if (node.fontName !== figma.mixed) {
         // Normal content
-        await loadFont(node.fontName);
+          await loadFont(node.fontName);
       } else {
         // Mixed content
         let len = node.characters.length;
         for (let i = 0; i < len; i++) {
-          await loadFont(node.getRangeFontName(i, i+1));
+            await loadFont(node.getRangeFontName(i, i+1));
         }
       }
       node.characters = typographResult;
@@ -1277,7 +1284,7 @@ async function runPlugin() {
   } else {
     figma.closePlugin(closePluginMessage);
   }
-}
+};
 
 // Работаем с настройками плагина
 async function runPluginSettings() {
@@ -1286,12 +1293,12 @@ async function runPluginSettings() {
   // Отправляем настройки в UI
   figma.showUI(__html__, { width: 340, height: 230 });
   figma.ui.postMessage({ action: "settings", data: settingsValuesLocal });
-}
+};
 
 // Сохраняем переданные из UI настройки
 async function savePluginSettings(settingsValues) {
   await figma.clientStorage.setAsync('settings', settingsValues);
-}
+};
 
 // Если в меню выбрано "SBOL Typograph"
 if (figma.command === "run") {
@@ -1315,4 +1322,5 @@ figma.ui.onmessage = (message) => {
       savePluginSettings(message.settingsData);
       break;
   }
-}
+};
+console.clear();
