@@ -2,16 +2,22 @@
   "name": "SBOL Typograph",
   "id": "907888805660596065",
   "api": "1.0.0",
-  "editorType": ["figma"],
   "main": "code.js",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "documentAccess": "dynamic-page",
+  "editorType": [
+    "figma"
+  ],
   "ui": "ui.html",
   "networkAccess": {
-    "allowedDomains": ["none"]
+    "allowedDomains": [
+      "none"
+    ]
   },
   "menu": [
     {"name": "SBOL Typograph", "command": "run"},
     {"separator": true},
     {"name": "⚙️ Настройки", "command": "settings"}
-  ],
-  "documentAccess": "dynamic-page"
+  ]
 }
