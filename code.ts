@@ -82,8 +82,8 @@ function createYoDict() {
   });
 }
 
-// Запуск Типографа
-function launchTypograph(stringToParse: string) {
+// Применение Типографа
+function applyTypograph(stringToParse: string) {
   function punctuation() {
     // Заменяем ...? ⟶ ?‥ и ...! ⟶ !‥ и ?... ⟶ ?‥ и !... ⟶ !‥
     stringToParse = stringToParse.replace(/(\.{2,}|…)?(\!|\?)(\.{2,}|…)?/gm, function (match, p1, p2, p3) {
@@ -917,31 +917,58 @@ function launchTypograph(stringToParse: string) {
   return stringToParse;
 }
 
-// Поиск текстовых узлов и применения к ним функции launchTypograph()
-async function searchTextNodes() {
-  // Если на странице ничего не выбрано ? Ищем текстовые узлы по всей странице : Ищем в выбранном элементе
-  const selection = figma.currentPage.selection.length == 0 ? figma.currentPage.children : figma.currentPage.selection;
+// Находим все текстовые узлы на странице или в выбранных элементах и возвращаем массив найденных узлов
+function findTextNodes(): TextNode[] {
+  const selection = figma.currentPage.selection;
+  let allTextNodes: TextNode[] = [];
 
-  for (const node of selection) {
-    if (node.type === "TEXT") {
-      // Проверяем, что текущий узел является текстовым
+  // Если есть выбранные элементы, проверяем каждый
+  if (selection.length > 0) {
+    selection.forEach((node) => {
+      // Если выбран текстовый узел, добавляем его
+      if (node.type === 'TEXT') {
+        allTextNodes.push(node);
+      }
+      // Если это контейнер (фрейм, группа и т.д.), ищем в нем текстовые узлы
+      else if ('findAllWithCriteria' in node) {
+        const nodesInSelection = node.findAllWithCriteria({
+          types: ['TEXT']
+        });
+        allTextNodes = allTextNodes.concat(nodesInSelection);
+      }
+    });
+    return allTextNodes;
+  } 
+  
+  // Если ничего не выбрано, ищем по всей странице
+  return figma.currentPage.findAllWithCriteria({
+    types: ['TEXT']
+  });
+}
+
+// Применяем к текстовым узлам Типограф
+function applyTypographToTextNodes() {
+  const textNodes = findTextNodes();
+
+  textNodes.forEach(async (node) => {
+      // Если в узле нет отсутствующих шрифтов
       if (!node.hasMissingFont) {
-        // Если в узле нет отсутствующих шрифтов
-        const typographResult: string = launchTypograph(node.characters);
+        // Применяем к текстовому узлу Типограф
+        const typographResult: string = applyTypograph(node.characters);
         // Если Типограф что то исправил
         if (node.characters !== typographResult) {
           // Загружаем шрифты текстового узла
-          for (const font of node.getRangeAllFontNames(0, node.characters.length)) {
-            await figma.loadFontAsync(font);
-          }
+          await Promise.all(
+            node.getRangeAllFontNames(0, node.characters.length)
+              .map(figma.loadFontAsync)
+          );
           node.characters = typographResult;
         }
+      // Узел содержит отсутствующие шрифты. Увеличиваем счетчик узлов с отсутствующими шрифтами
       } else {
-        // Узел содержит отсутствующие шрифты. Увеличиваем счётчик узлов с отсутствующими шрифтами
         _counterMissingFont++;
       }
-    }
-  }
+  });
 }
 
 // Отчёт о работе
@@ -995,11 +1022,13 @@ function workReport() {
 }
 
 // Запуск плагина
-async function runPlugin() {
+function runPlugin() {
   // Заполняем словарь Ёфикатора
   createYoDict();
-  // Поиск текстовых узлов и применения к ним типографа
-  await searchTextNodes();
+  
+  // Поиск текстовых узлов и применения к ним Типографа
+  applyTypographToTextNodes();
+  
   // Отчёт о работе
   workReport();
 };
@@ -1021,7 +1050,7 @@ async function saveSettings(settingsValues: { [key: string]: boolean }) {
 
   switch (figma.command) {
     case "run": // Если в меню выбрано "SBOL Typograph"
-      await runPlugin();
+      runPlugin();
       break;
     case "settings": // Если в меню выбрано "⚙️ Настройки"
       runSettings();
