@@ -947,29 +947,33 @@ function findTextNodes(): TextNode[] {
 }
 
 // Применяем к текстовым узлам Типограф
-function applyTypographToTextNodes() {
+async function applyTypographToTextNodes() {
   const textNodes = findTextNodes();
 
-  textNodes.forEach(async (node) => {
-      // Если в узле нет отсутствующих шрифтов
-      if (!node.hasMissingFont) {
-        // Применяем к текстовому узлу Типограф
-        const typographResult: string = applyTypograph(node.characters);
-        // Если Типограф что то исправил
-        if (node.characters !== typographResult) {
+  await Promise.all(textNodes.map(async (node) => {
+    // Если в узле нет отсутствующих шрифтов
+    if (!node.hasMissingFont) {
+      // Применяем к текстовому узлу Типограф
+      const typographResult: string = applyTypograph(node.characters);
+      // Если Типограф что-то исправил
+      if (node.characters !== typographResult) {
+        try {
           // Загружаем шрифты текстового узла
           await Promise.all(
             node.getRangeAllFontNames(0, node.characters.length)
               .map(figma.loadFontAsync)
           );
           node.characters = typographResult;
+        } catch (error) {
+          console.error("Не удалось загрузить шрифты:", error);
         }
-      // Узел содержит отсутствующие шрифты. Увеличиваем счетчик узлов с отсутствующими шрифтами
-      } else {
-        _counterMissingFont++;
       }
-  });
+    } else {
+      _counterMissingFont++;
+    }
+  }));
 }
+
 
 // Отчёт о работе
 function workReport() {
@@ -1022,12 +1026,12 @@ function workReport() {
 }
 
 // Запуск плагина
-function runPlugin() {
+async function runPlugin() {
   // Заполняем словарь Ёфикатора
   createYoDict();
   
   // Поиск текстовых узлов и применения к ним Типографа
-  applyTypographToTextNodes();
+  await applyTypographToTextNodes();
   
   // Отчёт о работе
   workReport();
@@ -1050,7 +1054,7 @@ async function saveSettings(settingsValues: { [key: string]: boolean }) {
 
   switch (figma.command) {
     case "run": // Если в меню выбрано "SBOL Typograph"
-      runPlugin();
+      await runPlugin();
       break;
     case "settings": // Если в меню выбрано "⚙️ Настройки"
       runSettings();

@@ -857,25 +857,31 @@ function findTextNodes() {
 }
 // Применяем к текстовым узлам Типограф
 function applyTypographToTextNodes() {
-    const textNodes = findTextNodes();
-    textNodes.forEach((node) => __awaiter(this, void 0, void 0, function* () {
-        // Если в узле нет отсутствующих шрифтов
-        if (!node.hasMissingFont) {
-            // Применяем к текстовому узлу Типограф
-            const typographResult = applyTypograph(node.characters);
-            // Если Типограф что то исправил
-            if (node.characters !== typographResult) {
-                // Загружаем шрифты текстового узла
-                yield Promise.all(node.getRangeAllFontNames(0, node.characters.length)
-                    .map(figma.loadFontAsync));
-                node.characters = typographResult;
+    return __awaiter(this, void 0, void 0, function* () {
+        const textNodes = findTextNodes();
+        yield Promise.all(textNodes.map((node) => __awaiter(this, void 0, void 0, function* () {
+            // Если в узле нет отсутствующих шрифтов
+            if (!node.hasMissingFont) {
+                // Применяем к текстовому узлу Типограф
+                const typographResult = applyTypograph(node.characters);
+                // Если Типограф что-то исправил
+                if (node.characters !== typographResult) {
+                    try {
+                        // Загружаем шрифты текстового узла
+                        yield Promise.all(node.getRangeAllFontNames(0, node.characters.length)
+                            .map(figma.loadFontAsync));
+                        node.characters = typographResult;
+                    }
+                    catch (error) {
+                        console.error("Не удалось загрузить шрифты:", error);
+                    }
+                }
             }
-            // Узел содержит отсутствующие шрифты. Увеличиваем счетчик узлов с отсутствующими шрифтами
-        }
-        else {
-            _counterMissingFont++;
-        }
-    }));
+            else {
+                _counterMissingFont++;
+            }
+        })));
+    });
 }
 // Отчёт о работе
 function workReport() {
@@ -926,12 +932,14 @@ function workReport() {
 }
 // Запуск плагина
 function runPlugin() {
-    // Заполняем словарь Ёфикатора
-    createYoDict();
-    // Поиск текстовых узлов и применения к ним Типографа
-    applyTypographToTextNodes();
-    // Отчёт о работе
-    workReport();
+    return __awaiter(this, void 0, void 0, function* () {
+        // Заполняем словарь Ёфикатора
+        createYoDict();
+        // Поиск текстовых узлов и применения к ним Типографа
+        yield applyTypographToTextNodes();
+        // Отчёт о работе
+        workReport();
+    });
 }
 ;
 // Запуск настроек плагина
@@ -952,7 +960,7 @@ function saveSettings(settingsValues) {
     yield initSettings();
     switch (figma.command) {
         case "run": // Если в меню выбрано "SBOL Typograph"
-            runPlugin();
+            yield runPlugin();
             break;
         case "settings": // Если в меню выбрано "⚙️ Настройки"
             runSettings();
