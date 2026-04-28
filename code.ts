@@ -18,9 +18,17 @@ let _yoDict = new Map();
 
 // Настройки по умолчанию
 let settingsValuesLocal: { [key: string]: boolean } = {
+  punctuation: true,
+  spaces: true,
   yo: true,
   quotemarks: true,
+  nbsp: true,
   phone: true,
+  dash: true,
+  lowerCase: true,
+  currency: true,
+  numbers: true,
+  misc: true,
   showresult: true,
 };
 
@@ -758,7 +766,7 @@ function applyTypograph(stringToParse: string) {
     changeMisc("Applepay|Apple[\u0020\u00A0]pay|Эпл[\u0020\u00A0]Пэй|ЭплПэй", "Apple\u00A0Pay");
     changeMisc("sms|смс", "СМС");
     changeMisc("wifi|wi-fi", "Wi-Fi");
-    changeMisc("мск|msk", "мск");
+    changeMisc("(?<![A-Za-zА-ЯЁа-яё])(мск|msk)(?![A-Za-zА-ЯЁа-яё])", "мск");
     
 
     // пуш-уведомление
@@ -900,17 +908,17 @@ function applyTypograph(stringToParse: string) {
   }
 
 
-  punctuation(); 
-  deleteSpaces();
+  if (settingsValuesLocal["punctuation"]) punctuation(); 
+  if (settingsValuesLocal["spaces"]) deleteSpaces();
   if (settingsValuesLocal["quotemarks"]) replaceQuoteMarks();
-  addNoBreakSpace();
+  if (settingsValuesLocal["nbsp"]) addNoBreakSpace();
   if (settingsValuesLocal["yo"]) YO();
   phoneNumber();
-  dash();
-  lowerCase();
-  currency();
-  numbers();
-  misc();
+  if (settingsValuesLocal["dash"]) dash();
+  if (settingsValuesLocal["lowerCase"]) lowerCase();
+  if (settingsValuesLocal["currency"]) currency();
+  if (settingsValuesLocal["numbers"]) numbers();
+  if (settingsValuesLocal["misc"]) misc();
 
   removeUnchangeable();
 
@@ -946,6 +954,272 @@ function findTextNodes(): TextNode[] {
   });
 }
 
+type FontNameRange = {
+  start: number;
+  end: number;
+  fontName: FontName;
+};
+
+type ParagraphFormattingRange = {
+  start: number;
+  end: number;
+  listOptions: TextListOptions;
+  listSpacing: number;
+  indentation: number;
+  paragraphIndent: number;
+  paragraphSpacing: number;
+};
+
+type TextNodeFormatting = {
+  textAlignHorizontal: TextNode["textAlignHorizontal"];
+  textAlignVertical: TextNode["textAlignVertical"];
+  paragraphRanges: ParagraphFormattingRange[];
+};
+
+function isSameFontName(a: FontName, b: FontName) {
+  return a.family === b.family && a.style === b.style;
+}
+
+function isSameParagraphFormatting(a: ParagraphFormattingRange, b: ParagraphFormattingRange) {
+  return (
+    a.listOptions.type === b.listOptions.type &&
+    a.listSpacing === b.listSpacing &&
+    a.indentation === b.indentation &&
+    a.paragraphIndent === b.paragraphIndent &&
+    a.paragraphSpacing === b.paragraphSpacing
+  );
+}
+
+function getFontNameRanges(node: TextNode): FontNameRange[] {
+  const ranges: FontNameRange[] = [];
+  const textLength = node.characters.length;
+
+  for (let i = 0; i < textLength; i++) {
+    const fontName = node.getRangeFontName(i, i + 1);
+
+    if (fontName === figma.mixed) continue;
+
+    const lastRange = ranges[ranges.length - 1];
+    if (lastRange && isSameFontName(lastRange.fontName, fontName)) {
+      lastRange.end = i + 1;
+    } else {
+      ranges.push({
+        start: i,
+        end: i + 1,
+        fontName
+      });
+    }
+  }
+
+  return ranges;
+}
+
+function getParagraphFormattingRanges(node: TextNode): ParagraphFormattingRange[] {
+  const ranges: ParagraphFormattingRange[] = [];
+  const textLength = node.characters.length;
+
+  for (let i = 0; i < textLength; i++) {
+    const listOptions = node.getRangeListOptions(i, i + 1);
+    const listSpacing = node.getRangeListSpacing(i, i + 1);
+    const indentation = node.getRangeIndentation(i, i + 1);
+    const paragraphIndent = node.getRangeParagraphIndent(i, i + 1);
+    const paragraphSpacing = node.getRangeParagraphSpacing(i, i + 1);
+
+    if (
+      listOptions === figma.mixed ||
+      listSpacing === figma.mixed ||
+      indentation === figma.mixed ||
+      paragraphIndent === figma.mixed ||
+      paragraphSpacing === figma.mixed
+    ) {
+      continue;
+    }
+
+    const formatting = {
+      start: i,
+      end: i + 1,
+      listOptions,
+      listSpacing,
+      indentation,
+      paragraphIndent,
+      paragraphSpacing
+    };
+    const lastRange = ranges[ranges.length - 1];
+
+    if (lastRange && isSameParagraphFormatting(lastRange, formatting)) {
+      lastRange.end = i + 1;
+    } else {
+      ranges.push(formatting);
+    }
+  }
+
+  return ranges;
+}
+
+function getTextNodeFormatting(node: TextNode): TextNodeFormatting {
+  return {
+    textAlignHorizontal: node.textAlignHorizontal,
+    textAlignVertical: node.textAlignVertical,
+    paragraphRanges: getParagraphFormattingRanges(node)
+  };
+}
+
+function getFontNameAtIndex(ranges: FontNameRange[], index: number) {
+  const range = ranges.find((item) => item.start <= index && index < item.end);
+  return range ? range.fontName : undefined;
+}
+
+function getParagraphFormattingAtIndex(ranges: ParagraphFormattingRange[], index: number) {
+  const range = ranges.find((item) => item.start <= index && index < item.end);
+  return range ? range : undefined;
+}
+
+function findNextEqualCharacters(oldText: string, newText: string, oldIndex: number, newIndex: number) {
+  const searchLimit = 64;
+  let bestMatch: { oldOffset: number, newOffset: number } | undefined;
+
+  for (let oldOffset = 0; oldOffset <= searchLimit && oldIndex + oldOffset < oldText.length; oldOffset++) {
+    for (let newOffset = 0; newOffset <= searchLimit && newIndex + newOffset < newText.length; newOffset++) {
+      if (oldOffset === 0 && newOffset === 0) continue;
+
+      if (oldText[oldIndex + oldOffset] === newText[newIndex + newOffset]) {
+        if (!bestMatch || oldOffset + newOffset < bestMatch.oldOffset + bestMatch.newOffset) {
+          bestMatch = { oldOffset, newOffset };
+        }
+      }
+    }
+  }
+
+  return bestMatch;
+}
+
+function getSourceIndexesForTypographedText(oldText: string, newText: string) {
+  const sourceIndexes: number[] = [];
+  let oldIndex = 0;
+  let newIndex = 0;
+
+  while (newIndex < newText.length) {
+    if (oldText[oldIndex] === newText[newIndex]) {
+      sourceIndexes.push(oldIndex);
+      oldIndex++;
+      newIndex++;
+      continue;
+    }
+
+    const nextEqualCharacters = findNextEqualCharacters(oldText, newText, oldIndex, newIndex);
+    const oldOffset = nextEqualCharacters ? nextEqualCharacters.oldOffset : oldText.length - oldIndex;
+    const newOffset = nextEqualCharacters ? nextEqualCharacters.newOffset : newText.length - newIndex;
+
+    for (let i = 0; i < newOffset; i++) {
+      const proportionalOldOffset = oldOffset > 0 ? Math.min(oldOffset - 1, Math.floor(i * oldOffset / newOffset)) : 0;
+      const sourceOldIndex = oldOffset > 0 ? oldIndex + proportionalOldOffset : oldIndex - 1;
+      sourceIndexes.push(sourceOldIndex);
+    }
+
+    oldIndex += oldOffset;
+    newIndex += newOffset;
+  }
+
+  return sourceIndexes;
+}
+
+function getSafeOldIndex(lastOldIndex: number, oldIndex: number) {
+  return Math.min(Math.max(oldIndex, 0), Math.max(lastOldIndex, 0));
+}
+
+function getFontNamesForTypographedText(oldText: string, newText: string, ranges: FontNameRange[]) {
+  const fontNames: FontName[] = [];
+  const sourceIndexes = getSourceIndexesForTypographedText(oldText, newText);
+  const lastOldIndex = ranges[ranges.length - 1].end - 1;
+
+  sourceIndexes.forEach((oldIndex) => {
+    const fontName = getFontNameAtIndex(ranges, getSafeOldIndex(lastOldIndex, oldIndex));
+
+    if (fontName) fontNames.push(fontName);
+  });
+
+  return fontNames;
+}
+
+function createFontNameRanges(fontNames: FontName[]) {
+  const ranges: FontNameRange[] = [];
+
+  fontNames.forEach((fontName, index) => {
+    const lastRange = ranges[ranges.length - 1];
+
+    if (lastRange && isSameFontName(lastRange.fontName, fontName)) {
+      lastRange.end = index + 1;
+    } else {
+      ranges.push({
+        start: index,
+        end: index + 1,
+        fontName
+      });
+    }
+  });
+
+  return ranges;
+}
+
+function createParagraphFormattingRanges(formattingItems: ParagraphFormattingRange[]) {
+  const ranges: ParagraphFormattingRange[] = [];
+
+  formattingItems.forEach((formatting, index) => {
+    const lastRange = ranges[ranges.length - 1];
+
+    if (lastRange && isSameParagraphFormatting(lastRange, formatting)) {
+      lastRange.end = index + 1;
+    } else {
+      ranges.push({
+        ...formatting,
+        start: index,
+        end: index + 1
+      });
+    }
+  });
+
+  return ranges;
+}
+
+function restoreFontNames(node: TextNode, oldText: string, newText: string, oldRanges: FontNameRange[]) {
+  const fontNames = getFontNamesForTypographedText(oldText, newText, oldRanges);
+  const newRanges = createFontNameRanges(fontNames);
+
+  newRanges.forEach((range) => {
+    node.setRangeFontName(range.start, range.end, range.fontName);
+  });
+}
+
+function restoreTextNodeFormatting(node: TextNode, oldText: string, newText: string, oldFormatting: TextNodeFormatting) {
+  node.textAlignHorizontal = oldFormatting.textAlignHorizontal;
+  node.textAlignVertical = oldFormatting.textAlignVertical;
+
+  if (oldFormatting.paragraphRanges.length === 0 || newText.length === 0) return;
+
+  const sourceIndexes = getSourceIndexesForTypographedText(oldText, newText);
+  const lastOldIndex = oldFormatting.paragraphRanges[oldFormatting.paragraphRanges.length - 1].end - 1;
+  const formattingItems: ParagraphFormattingRange[] = [];
+
+  sourceIndexes.forEach((oldIndex) => {
+    const formatting = getParagraphFormattingAtIndex(
+      oldFormatting.paragraphRanges,
+      getSafeOldIndex(lastOldIndex, oldIndex)
+    );
+
+    if (formatting) formattingItems.push(formatting);
+  });
+
+  const newRanges = createParagraphFormattingRanges(formattingItems);
+
+  newRanges.forEach((range) => {
+    node.setRangeListOptions(range.start, range.end, range.listOptions);
+    node.setRangeListSpacing(range.start, range.end, range.listSpacing);
+    node.setRangeIndentation(range.start, range.end, range.indentation);
+    node.setRangeParagraphIndent(range.start, range.end, range.paragraphIndent);
+    node.setRangeParagraphSpacing(range.start, range.end, range.paragraphSpacing);
+  });
+}
+
 // Применяем к текстовым узлам Типограф
 async function applyTypographToTextNodes() {
   const textNodes = findTextNodes();
@@ -958,12 +1232,20 @@ async function applyTypographToTextNodes() {
       // Если Типограф что-то исправил
       if (node.characters !== typographResult) {
         try {
+          const oldCharacters = node.characters;
+          const oldFontNameRanges = getFontNameRanges(node);
+          const oldFormatting = getTextNodeFormatting(node);
+
           // Загружаем шрифты текстового узла
           await Promise.all(
             node.getRangeAllFontNames(0, node.characters.length)
               .map(figma.loadFontAsync)
           );
           node.characters = typographResult;
+          if (oldFontNameRanges.length > 0 && typographResult.length > 0) {
+            restoreFontNames(node, oldCharacters, typographResult, oldFontNameRanges);
+          }
+          restoreTextNodeFormatting(node, oldCharacters, typographResult, oldFormatting);
         } catch (error) {
           console.error("Не удалось загрузить шрифты:", error);
         }
@@ -1040,7 +1322,7 @@ async function runPlugin() {
 // Запуск настроек плагина
 function runSettings() {
   // Отправляем настройки в UI
-  figma.showUI(__html__, { width: 340, height: 230 });
+  figma.showUI(__html__, { width: 340, height: 530 });
   figma.ui.postMessage({ action: "settings", data: settingsValuesLocal });
 };
 

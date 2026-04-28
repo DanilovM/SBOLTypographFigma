@@ -177,13 +177,37 @@
   function pluginSettings(settingsData) {
     workPlace.innerHTML += `
       <div class="workReportItem">
+        <label class="customSwitch">Исправлять пунктуацию<input type="checkbox" class="customSwitch__checkbox" name="punctuation"></label>
+      </div>
+      <div class="workReportItem">
+        <label class="customSwitch">Удалять лишние пробелы<input type="checkbox" class="customSwitch__checkbox" name="spaces"></label>
+      </div>
+      <div class="workReportItem">
         <label class="customSwitch">Исправлять Е на Ё<input type="checkbox" class="customSwitch__checkbox" name="yo"></label>
       </div>
       <div class="workReportItem">
         <label class="customSwitch">Исправлять кавычки<input type="checkbox" class="customSwitch__checkbox" name="quotemarks"></label>
       </div>
       <div class="workReportItem">
+        <label class="customSwitch">Добавлять неразрывные пробелы<input type="checkbox" class="customSwitch__checkbox" name="nbsp"></label>
+      </div>
+      <div class="workReportItem">
         <label class="customSwitch">Исправлять телефонные номера<input type="checkbox" class="customSwitch__checkbox" name="phone"></label>
+      </div>
+      <div class="workReportItem">
+        <label class="customSwitch">Исправлять тире и дефисы<input type="checkbox" class="customSwitch__checkbox" name="dash"></label>
+      </div>
+      <div class="workReportItem">
+        <label class="customSwitch">Исправлять регистр слов<input type="checkbox" class="customSwitch__checkbox" name="lowerCase"></label>
+      </div>
+      <div class="workReportItem">
+        <label class="customSwitch">Исправлять валюты<input type="checkbox" class="customSwitch__checkbox" name="currency"></label>
+      </div>
+      <div class="workReportItem">
+        <label class="customSwitch">Исправлять числа<input type="checkbox" class="customSwitch__checkbox" name="numbers"></label>
+      </div>
+      <div class="workReportItem">
+        <label class="customSwitch">Исправлять прочее<input type="checkbox" class="customSwitch__checkbox" name="misc"></label>
       </div>
       <div class="workReportItem">
         <label class="customSwitch">Показывать результат работы плагина<input type="checkbox" class="customSwitch__checkbox" name="showresult"></label>
