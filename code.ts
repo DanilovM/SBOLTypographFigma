@@ -965,7 +965,7 @@ async function applyTypographToTextNodes() {
     if (originalText === typographResult) return;
 
     try {
-      if (node.fontName !== figma.mixed) {
+      if (node.fontName !== figma.mixed && !hasMixedTextVisualParams(node, originalText.length)) {
         // В текстовом узле один стиль
         await figma.loadFontAsync(node.fontName);
         node.characters = typographResult;
@@ -991,6 +991,34 @@ async function applyTypographToTextNodes() {
 // ⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛ Схранение текстовых стилей ⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛
 // ⁛⁛⁛⁛⁛⁛ Автор кода Alexey Kalinin sonniydsgn https://github.com/sonniydsgn ⁛⁛⁛⁛⁛⁛
 // ⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛⁛
+function hasMixedTextVisualParams(node: TextNode, textLength: number): boolean {
+  if (textLength === 0) return false;
+
+  const styledSegments = node.getStyledTextSegments([
+    'fontName',
+    'fontSize',
+    'fontWeight',
+    'fontStyle',
+    'fills',
+    'fillStyleId',
+    'textStyleId',
+    'textCase',
+    'textDecoration',
+    'letterSpacing',
+    'lineHeight',
+    'listOptions',
+    'listSpacing',
+    'indentation',
+    'paragraphIndent',
+    'paragraphSpacing',
+    'hyperlink',
+    'openTypeFeatures',
+    'textStyleOverrides',
+  ], 0, textLength);
+
+  return styledSegments.length > 1;
+}
+
 /**
  * Применяет изменения текста через insertCharacters/deleteCharacters
  * вместо node.characters = ... чтобы сохранить стили
