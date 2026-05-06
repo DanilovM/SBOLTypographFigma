@@ -855,12 +855,18 @@ async function applyTypographToTextNodes() {
             return;
         }
         const originalText = node.characters;
-        const typographResult = applyTypograph(node.characters);
+        // Если текстовый узел пустой, даже если там только пробелы или переносы строк
+        if (originalText.trim().length === 0)
+            return;
+        const typographResult = applyTypograph(originalText);
         // Если Типограф ничего не исправил
         if (originalText === typographResult)
             return;
+        // getStyledTextSegments возвращает массив сегментов текста с общими стилями
+        // Если сегмент один — смешанных стилей нет
+        const textSegments = node.getStyledTextSegments(["fontSize", "fontWeight", "fontStyle", "textDecoration", "textDecorationStyle", "textDecorationOffset", "textDecorationThickness", "textDecorationColor", "textDecorationSkipInk", "textCase", "lineHeight", "letterSpacing", "fills", "textStyleId", "fillStyleId", "listOptions", "listSpacing", "indentation", "paragraphIndent", "paragraphSpacing", "hyperlink", "boundVariables", "textStyleOverrides"]);
         try {
-            if (node.fontName !== figma.mixed) {
+            if (node.fontName !== figma.mixed && textSegments.length === 1) {
                 // В текстовом узле один стиль
                 await figma.loadFontAsync(node.fontName);
                 node.characters = typographResult;
